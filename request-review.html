@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Request a Review</title>
+<style>
+:root{
+  --purple:#3c197d; --purple2:#5b2ea3; --purple3:#efe8fb;
+  --ink:#17212b; --muted:#687784; --bg:#f3f5f8; --line:#dfe4ea;
+  --ok:#2f7b50; --warn:#a66f19; --danger:#a74c4c; --shadow:0 14px 35px rgba(35,44,62,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.topbar{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--purple),#2c105f);color:#fff;display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.16)}
+.top-right{margin-left:auto;font-size:11px;color:#d9ccef;display:flex;align-items:center;gap:10px}
+.eph-dot{width:7px;height:7px;border-radius:50%;background:#8be0b0;box-shadow:0 0 0 3px rgba(139,224,176,.25)}
+.shell{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 55px)}
+.rail{background:#fff;border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:6px;position:sticky;top:55px;height:calc(100vh - 55px);z-index:20}
+.rail-label{font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 10px 4px}
+.tool{border:0;background:#fff;padding:11px 12px;border-radius:12px;color:#596875;font-size:13px;font-weight:700;text-align:left;display:flex;gap:10px;align-items:center;width:100%;text-decoration:none;box-sizing:border-box}
+.tool .ico{font-size:17px;width:22px;text-align:center}
+.tool.active{background:var(--purple3);color:var(--purple);font-weight:800}
+.rail-foot{margin-top:auto;font-size:10px;color:#9aa5ae;padding:10px;line-height:1.5}
+.main{min-width:0}
+.content{padding:20px 24px 40px;max-width:1500px;margin:auto}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap}
+.page-head h1{font-size:22px;margin:0}
+.page-head .sub{font-size:13px;color:var(--muted);margin-top:4px;max-width:70ch}
+.workflow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 20px}
+.step{padding:11px 9px;border-radius:11px;background:#eef1f5;color:#6d7881;text-align:center;font-size:11px;font-weight:900;cursor:not-allowed}
+.step.done,.step.current{cursor:pointer}
+.step.done:hover{background:#d3ecdc}
+.step .n{display:block;font-size:15px;margin-bottom:2px}
+.step.done{background:#e1f1e7;color:#2d6f49}
+.step.current{background:var(--purple2);color:#fff}
+.view{display:none}.view.active{display:block}
+@media(max-width:900px){.shell{grid-template-columns:1fr}.rail{display:none}}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.pad{padding:18px}
+.card h3{margin:0 0 2px;font-size:16px}
+.card .hint{font-size:12px;color:var(--muted);margin:0 0 14px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 14px;font-weight:800;color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--purple2);border-color:var(--purple2);color:#fff}
+.btn.ghost{background:#f7f8fa}
+.btn.sm{padding:7px 10px;font-size:12px;border-radius:9px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 9px;background:#edf1f5;font-size:11px;font-weight:800;color:#4d5c67}
+.badge.warn{background:#fbefd8;color:#8c641b}.badge.danger{background:#fae5e5;color:#9b3d3d}.badge.ok{background:#e5f3ea;color:#2f7b50}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.field-grid{grid-template-columns:1fr}}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);padding:9px 11px;border-radius:9px;background:#fff;font-size:13px}
+.field textarea{resize:vertical;min-height:80px;line-height:1.5}
+.field .mini{font-size:11px;color:var(--muted);margin-top:4px}
+.mini{font-size:11px;color:var(--muted)}
+.callout{border:1px solid var(--line);border-radius:13px;padding:13px 15px;font-size:13px;line-height:1.5;background:#fbfcfe}
+.callout.warn{background:#fdf6e7;border-color:#f0e0bd}
+.msg-preview{font-size:13px;line-height:1.55;background:#f7f9fb;border:1px solid #eef1f5;border-radius:10px;padding:12px;white-space:pre-wrap}
+.toast{position:fixed;right:18px;bottom:20px;background:#1d2330;color:#fff;padding:11px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:100}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="top-right"><span class="eph-dot"></span>Ephemeral session · nothing is saved</div>
+  </header>
+  <div class="shell">
+    <aside class="rail">
+      <div class="rail-label">Tools</div>
+      <a class="tool" href="review-attribution.html"><span class="ico">★</span>Review Insights</a>
+      <button class="tool active"><span class="ico">✉</span>Request a Review</button>
+      <div class="rail-foot">Compose a review-request text for a patient — you'll confirm the exact message before it sends.</div>
+    </aside>
+    <main class="main">
+      <div class="content">
+        <div class="page-head">
+          <h1>Request a Review</h1>
+          <p class="sub">Fill in the visit details to generate a review-request text, then confirm before it sends.</p>
+        </div>
+
+        <div class="workflow" id="workflow">
+          <div class="step current" data-step="visit" onclick="jumpToStep('visit')"><span class="n">1</span>Visit details</div>
+          <div class="step" data-step="message" onclick="jumpToStep('message')"><span class="n">2</span>Message</div>
+          <div class="step" data-step="confirm" onclick="jumpToStep('confirm')"><span class="n">3</span>Confirm &amp; send</div>
+        </div>
+
+        <section class="view active" id="view-visit">
+          <div class="card pad">
+            <h3>1 · Visit details</h3>
+            <div class="field-grid">
+              <div class="field">
+                <label for="custName">Customer name</label>
+                <input type="text" id="custName" placeholder="Jane Smith" oninput="renderPreview()">
+              </div>
+              <div class="field">
+                <label for="custPhone">Cell phone</label>
+                <input type="tel" id="custPhone" placeholder="(555) 123-4567" oninput="onPhoneInput()">
+                <div class="mini" id="phoneHint"></div>
+              </div>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="officeSel">Office</label>
+                <select id="officeSel" onchange="onOfficeChange()"><option value="">No settings loaded — open Review Insights first</option></select>
+              </div>
+              <div class="field">
+                <label for="staffSel">Staff seen (optional)</label>
+                <select id="staffSel" onchange="renderPreview()"><option value="">— none —</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:16px;justify-content:flex-end">
+            <button class="btn primary" onclick="go('message')">Continue to message →</button>
+          </div>
+        </section>
+
+        <section class="view" id="view-message">
+          <div class="card pad">
+            <h3>2 · Message</h3>
+            <p class="hint">Edit the template if you like. Tokens: <code>{customer}</code>, <code>{office}</code>, <code>{staff}</code>, <code>{link}</code>.</p>
+            <div class="field">
+              <textarea id="template" oninput="renderPreview()">Hi {customer}! Thank you for visiting us at {office}. If you enjoyed your visit with {staff}, we'd really appreciate a quick review: {link}</textarea>
+            </div>
+            <div id="linkWarning"></div>
+            <div class="msg-preview" id="preview"></div>
+          </div>
+          <div class="row" style="margin-top:16px;justify-content:space-between">
+            <button class="btn ghost" onclick="go('visit')">← Back</button>
+            <button class="btn primary" onclick="goToConfirm()">Continue to confirm →</button>
+          </div>
+        </section>
+
+        <section class="view" id="view-confirm">
+          <div class="card pad">
+            <h3>3 · Confirm &amp; send</h3>
+            <p class="hint">Double check before sending — this is the last step.</p>
+            <p class="mini" id="confirmSummary" style="margin:0 0 10px"></p>
+            <div class="msg-preview" id="confirmPreview"></div>
+          </div>
+          <div class="row" style="margin-top:16px;justify-content:space-between">
+            <button class="btn ghost" onclick="go('message')">← Back</button>
+            <button class="btn primary" onclick="confirmSend()">Send text</button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+let ROSTER_OFFICES={}; // {officeName: [staffName,...]}
+let REVIEW_LINKS={};
+
+function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(window.__t);window.__t=setTimeout(()=>t.style.opacity=0,1900);}
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+// Shared with review-attribution.html via localStorage (same key) -- this page only reads it;
+// load/edit the roster and settings over in Review Insights.
+const SETTINGS_STORAGE_KEY='dermaops_settings_v1';
+function loadSettingsFromStorage(){ try{const raw=localStorage.getItem(SETTINGS_STORAGE_KEY);return raw?JSON.parse(raw):null;}catch(e){return null;} }
+function applySettingsData(data){
+  const roster=Array.isArray(data)?data:(data.roster||data.staff||[]);
+  ROSTER_OFFICES={};
+  roster.forEach(p=>{
+    const name=p.name||p.Name; if(!name)return;
+    const offices=Array.isArray(p.offices)?p.offices:(p.office?[p.office]:[]);
+    offices.forEach(o=>{ (ROSTER_OFFICES[o]=ROSTER_OFFICES[o]||[]).push(name); });
+  });
+  REVIEW_LINKS=(data.reviewLinks&&typeof data.reviewLinks==='object')?data.reviewLinks:{};
+  populateOffices();
+}
+function populateOffices(){
+  const offices=Object.keys(ROSTER_OFFICES).sort();
+  const sel=$('#officeSel');
+  sel.innerHTML=offices.length?offices.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join(''):'<option value="">No settings loaded — open Review Insights first</option>';
+  onOfficeChange();
+}
+function onOfficeChange(){
+  const office=$('#officeSel').value;
+  const staff=(ROSTER_OFFICES[office]||[]).slice().sort();
+  $('#staffSel').innerHTML='<option value="">— none —</option>'+staff.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  renderPreview();
+}
+function onPhoneInput(){
+  const digits=$('#custPhone').value.replace(/\D/g,'').slice(0,10);
+  $('#phoneHint').textContent=digits.length===10?'':`${digits.length}/10 digits`;
+  renderPreview();
+}
+function composeMessage(){
+  const customer=$('#custName').value.trim()||'there';
+  const office=$('#officeSel').value||'our office';
+  const staff=$('#staffSel').value||'our team';
+  const link=REVIEW_LINKS[$('#officeSel').value]||'';
+  return $('#template').value
+    .replaceAll('{customer}',customer)
+    .replaceAll('{office}',office)
+    .replaceAll('{staff}',staff)
+    .replaceAll('{link}',link||'[no review link set for this office yet]');
+}
+function renderPreview(){
+  const office=$('#officeSel').value;
+  const hasLink=office&&REVIEW_LINKS[office];
+  $('#linkWarning').innerHTML=(office&&!hasLink)?`<div class="callout warn" style="margin-bottom:12px">No Google review link is set for <b>${escapeHtml(office)}</b> yet — add one under <code>reviewLinks</code> in Settings.json.</div>`:'';
+  $('#preview').textContent=composeMessage();
+}
+/* ---------------- step navigation (mirrors review-attribution.html's pattern) ---------------- */
+const STEP_ORDER=['visit','message','confirm'];
+let currentStep='visit';
+function go(step){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('#view-'+step).classList.add('active');
+  currentStep=step;
+  if(step==='confirm')renderConfirmSummary();
+  markCurrent(step);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function markCurrent(step){
+  const ci=STEP_ORDER.indexOf(step);
+  document.querySelectorAll('.step').forEach(el=>{
+    const si=STEP_ORDER.indexOf(el.dataset.step);
+    el.classList.toggle('current',si===ci);
+    el.classList.toggle('done',si<ci);
+  });
+}
+function jumpToStep(step){
+  const ti=STEP_ORDER.indexOf(step), ci=STEP_ORDER.indexOf(currentStep);
+  if(ti<=ci)go(step); else toast('Finish the current step first');
+}
+function goToConfirm(){
+  const digits=$('#custPhone').value.replace(/\D/g,'');
+  if(!$('#custName').value.trim()){toast("Enter the customer's name first");go('visit');return;}
+  if(digits.length!==10){toast('Enter a 10-digit cell phone first');go('visit');return;}
+  if(!$('#officeSel').value){toast('Select an office first');go('visit');return;}
+  go('confirm');
+}
+function renderConfirmSummary(){
+  const digits=$('#custPhone').value.replace(/\D/g,'');
+  const phoneFmt=digits.length===10?`(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`:($('#custPhone').value||'—');
+  const staff=$('#staffSel').value;
+  $('#confirmSummary').innerHTML=`To: <b>${escapeHtml($('#custName').value.trim()||'—')}</b> · ${escapeHtml(phoneFmt)} · ${escapeHtml($('#officeSel').value||'—')}${staff?' · seen '+escapeHtml(staff):''}`;
+  $('#confirmPreview').textContent=composeMessage();
+}
+function confirmSend(){
+  const digits=$('#custPhone').value.replace(/\D/g,'');
+  const body=composeMessage();
+  // STUB: no SMS provider is wired up yet. A real send would go here, e.g.:
+  //   await fetch('/api/send-sms', {method:'POST', headers:{'Content-Type':'application/json'},
+  //     body: JSON.stringify({to:'+1'+digits, body})});
+  console.log('[request-review] would send SMS', {to:'+1'+digits, body});
+  toast('Not actually sent — no SMS provider connected yet (see console)');
+}
+const restored=loadSettingsFromStorage();
+if(restored)applySettingsData(restored);
+else populateOffices();
+renderPreview();
+</script>
+</body>
+</html>

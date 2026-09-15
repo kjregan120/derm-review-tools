@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Review Tools</title>
+<style>
+:root{
+  --purple:#3c197d; --purple2:#5b2ea3; --purple3:#efe8fb;
+  --ink:#17212b; --muted:#687784; --bg:#f3f5f8; --line:#dfe4ea; --shadow:0 14px 35px rgba(35,44,62,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.topbar{background:linear-gradient(90deg,var(--purple),#2c105f);color:#fff;padding:14px 20px;font-weight:900;font-size:18px}
+.wrap{max-width:760px;margin:0 auto;padding:32px 20px}
+h1{font-size:22px;margin:0 0 6px}
+p.sub{color:var(--muted);font-size:13px;margin:0 0 24px;max-width:60ch}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.cards{grid-template-columns:1fr}}
+a.card{display:block;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px;text-decoration:none;color:var(--ink)}
+a.card .ico{font-size:22px}
+a.card h3{margin:8px 0 4px;font-size:16px}
+a.card p{margin:0;font-size:12px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="topbar">Review Tools</div>
+<div class="wrap">
+  <h1>Review Tools</h1>
+  <p class="sub">Two standalone tools, each a single self-contained HTML file — no data is hosted here. Upload your own roster/reviews when you open a tool.</p>
+  <div class="cards">
+    <a class="card" href="review-attribution.html">
+      <div class="ico">★</div>
+      <h3>Review Insights</h3>
+      <p>Turn a location's Google reviews into per-staff sentiment signals — matching, sentiment scoring, categories, and a filterable dashboard.</p>
+    </a>
+    <a class="card" href="request-review.html">
+      <div class="ico">✉</div>
+      <h3>Request a Review</h3>
+      <p>Compose a review-request text for a patient, with a confirm step before anything sends.</p>
+    </a>
+  </div>
+</div>
+</body>
+</html>

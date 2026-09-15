@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>DermaOps · Review Insights</title>
+<style>
+:root{
+  --purple:#3c197d; --purple2:#5b2ea3; --purple3:#efe8fb;
+  --ink:#17212b; --muted:#687784; --bg:#f3f5f8; --panel:#fff; --line:#dfe4ea;
+  --ok:#2f7b50; --warn:#a66f19; --danger:#a74c4c; --cyan:#dff3f3; --shadow:0 14px 35px rgba(35,44,62,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh}
+.topbar{
+  position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--purple),#2c105f);
+  color:#fff;display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.16)
+}
+.top-right{margin-left:auto;font-size:11px;color:#d9ccef;display:flex;align-items:center;gap:10px}
+.eph-dot{width:7px;height:7px;border-radius:50%;background:#8be0b0;box-shadow:0 0 0 3px rgba(139,224,176,.25)}
+.shell{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 55px)}
+.rail{
+  background:#fff;border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:6px;
+  position:sticky;top:55px;height:calc(100vh - 55px);z-index:20
+}
+.rail-label{font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 10px 4px}
+.tool{border:0;background:#fff;padding:11px 12px;border-radius:12px;color:#596875;font-size:13px;font-weight:700;text-align:left;display:flex;gap:10px;align-items:center;width:100%;text-decoration:none;box-sizing:border-box}
+.tool .ico{font-size:17px;width:22px;text-align:center}
+.tool.active{background:var(--purple3);color:var(--purple);font-weight:800}
+.tool.soon{color:#aab4bd;cursor:default}
+.tool.soon .tag{margin-left:auto;font-size:9px;font-weight:900;letter-spacing:.05em;background:#eef1f5;color:#9aa5ae;border-radius:999px;padding:3px 7px}
+.rail-foot{margin-top:auto;font-size:10px;color:#9aa5ae;padding:10px;line-height:1.5}
+.main{min-width:0}
+.content{padding:20px 24px 40px;max-width:1500px;margin:auto}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap}
+.page-head h1{font-size:22px;margin:0}
+.page-head .sub{font-size:13px;color:var(--muted);margin-top:4px;max-width:70ch}
+.workflow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0 20px}
+.step{padding:11px 9px;border-radius:11px;background:#eef1f5;color:#6d7881;text-align:center;font-size:11px;font-weight:900;position:relative;cursor:not-allowed}
+.step.done,.step.current{cursor:pointer}
+.step.done:hover{background:#d3ecdc}
+.step .n{display:block;font-size:15px;margin-bottom:2px}
+.step.done{background:#e1f1e7;color:#2d6f49}
+.step.current{background:var(--purple2);color:#fff}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.pad{padding:18px}
+.card h3{margin:0 0 2px;font-size:16px}
+.card .hint{font-size:12px;color:var(--muted);margin:0 0 14px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 14px;font-weight:800;color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--purple2);border-color:var(--purple2);color:#fff}
+.btn.ghost{background:#f7f8fa}
+.btn.sm{padding:7px 10px;font-size:12px;border-radius:9px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 9px;background:#edf1f5;font-size:11px;font-weight:800;color:#4d5c67}
+.badge.warn{background:#fbefd8;color:#8c641b}.badge.danger{background:#fae5e5;color:#9b3d3d}.badge.ok{background:#e5f3ea;color:#2f7b50}
+.badge.info{background:var(--purple3);color:var(--purple)}
+.view{display:none}.view.active{display:block}
+.uploads{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.uploads{grid-template-columns:1fr}.shell{grid-template-columns:1fr}.rail{display:none}}
+.drop{border:2px dashed #cdd5de;border-radius:14px;padding:22px;text-align:center;background:#fbfcfe;transition:.15s}
+.drop.hot{border-color:var(--purple2);background:#f7f2ff}
+.drop b{display:block;font-size:14px;margin-bottom:4px}
+.drop span{font-size:12px;color:var(--muted)}
+.filechip{display:inline-flex;align-items:center;gap:8px;background:#f2f4f7;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:12px;font-weight:700;margin:6px 6px 0 0}
+.filechip .x{border:0;background:transparent;color:var(--muted);font-weight:900}
+.table-scroll{overflow-x:auto}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:11px 10px;border-bottom:1px solid #edf0f3;text-align:left;font-size:12px;vertical-align:top}
+.table th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.sel{border:1px solid var(--line);padding:7px 9px;border-radius:9px;background:#fff;font-size:12px;font-weight:700}
+.callout{border:1px solid var(--line);border-radius:13px;padding:13px 15px;font-size:13px;line-height:1.5;background:#fbfcfe}
+.callout.warn{background:#fdf6e7;border-color:#f0e0bd}
+.callout.info{background:#f7f3fd;border-color:#e4d7f6}
+.callout b{color:var(--ink)}
+.progress{height:9px;background:#eef1f5;border-radius:999px;overflow:hidden}
+.progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--purple2),var(--purple));width:0;transition:width .2s}
+.rev-item{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.rev-item.flag{border-color:#e9c98f;background:#fffdf7}
+.rev-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.rev-text{font-size:13px;line-height:1.55;background:#f7f9fb;border:1px solid #eef1f5;border-radius:10px;padding:10px 12px;margin:8px 0}
+.person-row{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:11px;margin-top:8px}
+@media(max-width:700px){.person-row{grid-template-columns:1fr}}
+.person-row .who{font-weight:900}
+.person-row .rat{font-size:11px;color:var(--muted);margin-top:2px}
+.mini{font-size:11px;color:var(--muted)}
+.stars{letter-spacing:1px}
+.senti{font-weight:900;font-size:12px;padding:4px 8px;border-radius:8px}
+.senti.pos{background:#e5f3ea;color:#2f7b50}.senti.neg{background:#fae5e5;color:#9b3d3d}.senti.neu{background:#eef1f5;color:#5b6772}.senti.mix{background:#fbefd8;color:#8c641b}
+mark.hl-pos{background:#cfead9;color:#1f5c3a;padding:0 2px;border-radius:3px;font-weight:800}
+mark.hl-neg{background:#f7cfcf;color:#8a3232;padding:0 2px;border-radius:3px;font-weight:800}
+.conf{font-size:11px;font-weight:800}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr}.uploads{grid-template-columns:1fr}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.kpi .v{font-size:26px;font-weight:900;line-height:1.1}
+.kpi .k{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+.chart-wrap{overflow-x:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;font-weight:700;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.person-card{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow);background:#fff}
+.person-card .ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.person-card .nm{font-size:16px;font-weight:900}
+.toast{position:fixed;right:18px;bottom:20px;background:#1d2330;color:#fff;padding:11px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:100}
+.spin{width:15px;height:15px;border:2px solid #d7c5f3;border-top-color:var(--purple2);border-radius:50%;display:inline-block;animation:sp .7s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.cov-row{display:grid;grid-template-columns:200px 1fr 36px;gap:12px;align-items:center;padding:6px 0;font-size:13px}
+.cov-name{font-weight:700}
+.cov-bar{background:#eef1f5;border-radius:999px;height:10px;overflow:hidden}
+.cov-bar i{display:block;height:100%;background:var(--purple2)}
+@media(max-width:600px){.cov-row{grid-template-columns:130px 1fr 30px;gap:8px;font-size:12px}}
+.foot-note{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5}
+a.inline{color:var(--purple2);font-weight:700}
+.modal-overlay{position:fixed;inset:0;background:rgba(20,24,32,.55);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto}
+.modal-card{background:#fff;border-radius:16px;max-width:900px;width:100%;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+@media(max-width:700px){.modal-overlay{padding:14px}.modal-card{padding:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="top-right"><span class="eph-dot"></span>Ephemeral session · nothing is saved</div>
+  </header>
+
+  <div class="shell">
+    <aside class="rail">
+      <div class="rail-label">Tools</div>
+      <button class="tool active"><span class="ico">★</span>Review Insights</button>
+      <a class="tool" href="request-review.html"><span class="ico">✉</span>Request a Review</a>
+      <div class="rail-foot">A wedge tool. Upload, analyze, export, close — no data is stored after this tab is gone.</div>
+    </aside>
+
+    <main class="main">
+      <div class="content">
+        <div class="page-head">
+          <div>
+            <h1>Review Insights</h1>
+            <p class="sub">Turn a location's Google reviews into per-staff sentiment signals — separating the overall visit rating from how each named person was actually spoken about. A supporting signal for reviews, not an automated scorecard.</p>
+          </div>
+        </div>
+
+        <div class="workflow" id="workflow">
+          <div class="step current" data-step="upload" onclick="jumpToStep('upload')"><span class="n">1</span>Upload</div>
+          <div class="step" data-step="reconcile" onclick="jumpToStep('reconcile')"><span class="n">2</span>Reconcile</div>
+          <div class="step" data-step="attribute" onclick="jumpToStep('attribute')"><span class="n">3</span>Attribute</div>
+          <div class="step" data-step="review" onclick="jumpToStep('review')"><span class="n">4</span>Review</div>
+          <div class="step" data-step="dashboard" onclick="jumpToStep('dashboard')"><span class="n">5</span>Dashboard</div>
+        </div>
+
+        <!-- STEP 1: UPLOAD -->
+        <section class="view active" id="view-upload">
+          <div class="uploads">
+            <div class="card pad">
+              <h3>1 · Staff roster & settings</h3>
+              <p class="hint">Accepts a <b>settings JSON</b> (recommended — bundles roster, aliases, and sentiment tuning together), a roster <b>CSV</b>, or a plain <b>.txt</b> roster. Credentials, names, and nicknames are handled automatically.</p>
+              <div class="drop" id="drop-roster">
+                <b>Drop settings JSON, roster CSV, or TXT here</b>
+                <span>or <a class="inline" onclick="pick('roster')">browse</a></span>
+              </div>
+              <div id="roster-chips"></div>
+              <div id="roster-report"></div>
+              <div class="row" style="margin-top:12px">
+                <button class="btn sm primary" onclick="downloadSettings()">Export settings (JSON)</button>
+                <span class="mini">Saves the current roster, aliases, and sentiment keyword lists — including anything you've added this session — back into one file.</span>
+              </div>
+            </div>
+            <div class="card pad">
+              <h3>2 · Review files</h3>
+              <p class="hint">One CSV per location. <b>The file name is the office name</b> (e.g. <i>Westport.csv</i>). Columns: Reviewer, Rating, Date, MonthsAgo, ApproxDate, Review.</p>
+              <div class="drop" id="drop-reviews">
+                <b>Drop one or more review CSVs here</b>
+                <span>or <a class="inline" onclick="pick('reviews')">browse</a></span>
+              </div>
+              <div id="review-chips"></div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:16px;justify-content:flex-end">
+            <button class="btn primary" id="toReconcile" disabled onclick="go('reconcile')">Continue to reconcile →</button>
+          </div>
+          <input type="file" id="file-roster" accept=".csv,.txt,.json" hidden>
+          <input type="file" id="file-reviews" accept=".csv" multiple hidden>
+        </section>
+
+        <!-- STEP 2: RECONCILE -->
+        <section class="view" id="view-reconcile">
+          <div class="card pad">
+            <h3>Match each review file to an office</h3>
+            <p class="hint">The file name is the only link between a review file and a roster office, so confirm every match before anything is scored. Unmatched files are skipped; roster offices with no file get no data.</p>
+            <div id="reconcile-body"></div>
+          </div>
+          <div class="row" style="margin-top:16px;justify-content:space-between">
+            <button class="btn ghost" onclick="go('upload')">← Back</button>
+            <button class="btn primary" id="toAttribute" onclick="go('attribute')">Continue to attribute →</button>
+          </div>
+        </section>
+
+        <!-- STEP 3: ATTRIBUTE -->
+        <section class="view" id="view-attribute">
+          <div class="card pad">
+            <h3>Attribute reviews to staff</h3>
+            <p class="hint">Names are matched deterministically against the roster (word-boundary, alias-aware). Every matched person then gets their <b>own</b> sentiment and a confidence score — a review can praise one person and fault another in the same breath.</p>
+            <div class="callout info" style="margin-bottom:14px">
+              <b>How sentiment is scored.</b> The rules engine runs instantly and offline: it scores the clause around each matched name and flags every result for your review. Switching to <i>Claude — live</i> (a later add) reads each mention for the sentiment directed <i>at that specific person</i>, handling contrast, pronouns, sarcasm, and self-introductions. Either way the overall star rating stays separate — it describes the whole visit, not the person.
+            </div>
+            <div class="card pad" style="margin-bottom:14px;background:#fbfcfe">
+              <h3>Sentiment keyword lists</h3>
+              <p class="hint">The rules engine scores a person's clause against these word/phrase lists (one per line, case-insensitive). Uploading a file <b>replaces</b> that list for this session — download the current one first to use as your starting point. These also travel inside the combined settings JSON (Upload step) as <code>sentimentKeywords.positive</code> / <code>.negative</code>, so you don't have to manage them separately.</p>
+              <div class="row" style="gap:24px;flex-wrap:wrap">
+                <div>
+                  <div class="mini" style="margin-bottom:6px"><b>Positive</b> — <span id="posWordCount"></span></div>
+                  <div class="row" style="gap:6px">
+                    <button class="btn sm ghost" onclick="pickKeywords('pos')">Upload .txt</button>
+                    <button class="btn sm ghost" onclick="downloadKeywords('pos')">Download current</button>
+                    <button class="btn sm ghost" id="posResetBtn" style="display:none" onclick="resetKeywords('pos')">Reset to default</button>
+                  </div>
+                </div>
+                <div>
+                  <div class="mini" style="margin-bottom:6px"><b>Negative</b> — <span id="negWordCount"></span></div>
+                  <div class="row" style="gap:6px">
+                    <button class="btn sm ghost" onclick="pickKeywords('neg')">Upload .txt</button>
+                    <button class="btn sm ghost" onclick="downloadKeywords('neg')">Download current</button>
+                    <button class="btn sm ghost" id="negResetBtn" style="display:none" onclick="resetKeywords('neg')">Reset to default</button>
+                  </div>
+                </div>
+              </div>
+              <input type="file" id="file-pos" accept=".txt" hidden>
+              <input type="file" id="file-neg" accept=".txt" hidden>
+            </div>
+            <div id="coverage-panel"></div>
+            <div class="row" style="margin-bottom:12px">
+              <button class="btn primary" id="runBtn" onclick="runAttribution()">Run attribution</button>
+              <label class="mini">Sentiment engine:
+                <select class="sel" id="engine">
+                  <option value="rules" selected>Rules engine (instant)</option>
+                  <option value="auto">Claude — live (add later)</option>
+                </select>
+              </label>
+              <span id="run-status" class="mini"></span>
+            </div>
+            <div class="progress" id="prog" style="display:none"><i></i></div>
+            <div id="attr-summary" style="margin-top:14px"></div>
+          </div>
+          <div class="row" style="margin-top:16px;justify-content:space-between">
+            <button class="btn ghost" onclick="go('reconcile')">← Back</button>
+            <button class="btn primary" id="toReview" disabled onclick="go('review')">Continue to review →</button>
+          </div>
+        </section>
+
+        <!-- STEP 4: REVIEW QUEUE -->
+        <section class="view" id="view-review">
+          <div class="card pad" style="margin-bottom:16px">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <h3>Confirm the attributions</h3>
+                <p class="hint" style="margin:0">Correct anything the engine got wrong before it reaches the dashboard. By default only flagged items are shown — multi-person, low-confidence, fuzzy, ambiguous, self-mention, or star-rating mismatches. Company-wide reviews (no staff named) don't need your attention and are excluded here; switch "Show" to see them.</p>
+                <p class="hint" style="margin:6px 0 0"><mark class="hl-pos" style="margin-right:6px">green</mark>words the engine scored as positive, <mark class="hl-neg">red</mark>as negative — right in the review text, so a flagged item is explainable at a glance.</p>
+              </div>
+              <label class="mini">Show:
+                <select class="sel" id="queueFilter" onchange="renderQueue()">
+                  <option value="flag">Needs review only</option>
+                  <option value="all">Everything</option>
+                  <option value="company">Company-wide only</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="callout info" style="margin-bottom:16px">
+            <b>Improving the matcher.</b> Export everything the engine decided on this batch — matched alias, confidence, fuzzy/ambiguous/self-mention flags, sentiment, and the recurring names that matched no one — as a JSON file. Hand it to Claude in a new conversation to review matching performance and tighten aliases/rules.
+            <div class="row" style="margin-top:8px"><button class="btn sm primary" onclick="exportDiagnostics()">Export for matching review (JSON)</button></div>
+          </div>
+          <div id="queue-body"></div>
+          <div class="row" style="margin-top:4px;justify-content:space-between">
+            <button class="btn ghost" onclick="go('attribute')">← Back</button>
+            <button class="btn primary" onclick="go('dashboard')">See dashboard →</button>
+          </div>
+        </section>
+
+        <!-- STEP 5: DASHBOARD -->
+        <section class="view" id="view-dashboard">
+          <div class="row" style="justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+            <div class="mini">Locations: <span id="officeChecks" class="row" style="display:inline-flex;gap:12px;vertical-align:middle"></span></div>
+            <label class="mini">Min mentions per month to plot a trend point:
+              <select class="sel" id="minN" onchange="renderDashboard()">
+                <option value="1">1</option><option value="2" selected>2</option><option value="3">3</option>
+              </select>
+            </label>
+          </div>
+          <div class="card pad" style="margin-bottom:16px">
+            <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px">
+              <div class="row" style="flex-wrap:wrap;gap:14px">
+                <label class="mini">From:
+                  <input type="month" class="sel" id="filterFrom" onchange="renderDashboard()">
+                </label>
+                <label class="mini">To:
+                  <input type="month" class="sel" id="filterTo" onchange="renderDashboard()">
+                </label>
+                <label class="mini">Star rating:
+                  <select class="sel" id="filterStar" onchange="renderDashboard()">
+                    <option value="all">All stars</option>
+                    <option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option>
+                  </select>
+                </label>
+                <label class="mini">Category:
+                  <select class="sel" id="filterCategory" onchange="renderDashboard()"><option value="all">All categories</option></select>
+                </label>
+                <label class="mini">Sentiment:
+                  <select class="sel" id="filterSentiment" onchange="renderDashboard()">
+                    <option value="all">All sentiment</option>
+                    <option value="positive">Positive</option><option value="negative">Negative</option><option value="neutral">Neutral</option><option value="mixed">Mixed</option>
+                  </select>
+                </label>
+                <label class="mini">Staff member:
+                  <select class="sel" id="filterStaff" onchange="renderDashboard()"><option value="all">All staff</option></select>
+                </label>
+              </div>
+              <button class="btn sm ghost" onclick="clearDashFilters()">Clear filters</button>
+            </div>
+            <p class="hint" style="margin:10px 0 0">Date, star, and category filters narrow which <b>reviews</b> are in scope everywhere below, including each person's profile. Sentiment and staff member narrow which <b>mentions</b> count toward mention-based stats (staff mentions, location average, per-person cards), since both belong to a specific person's mention, not a whole review. Check multiple <b>Locations</b> above to see someone who works at more than one office combined into a single card and profile — matched by their exact name across offices, so keep spelling consistent in the roster.</p>
+          </div>
+          <div id="dash-body"></div>
+          <div class="row" style="margin-top:16px;justify-content:space-between">
+            <button class="btn ghost" onclick="go('review')">← Back</button>
+            <button class="btn primary" onclick="exportCSV()">Export attributions (CSV)</button>
+          </div>
+          <p class="foot-note">This tool surfaces one signal among many. Mention-based scores are self-selected (delighted and upset customers name names; most don't), volume varies by shift, and small samples are noisy — so treat these as conversation starters in a fair review process, not as a standalone basis for pay or discipline.</p>
+        </section>
+
+      </div>
+    </main>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="profile-modal" style="display:none" onclick="if(event.target===this)closeProfile()">
+  <div class="modal-card" id="profile-body"></div>
+</div>
+
+<script>
+/* ---------------- state ---------------- */
+const S = {
+  rosterFile:null,
+  roster:null,            // {offices:{name:{staff:[{id,canonical,aliases:[]}], aliasIndex:Map, collisions:[], warnings:[]}}}
+  reviewFiles:[],         // [{name, office, rows:[]}]
+  reconcile:[],           // [{fileName, guess, matched, status}]
+  attributions:[],        // see build
+  step:'upload'
+};
+const COMMON_WORDS = new Set(['red','ace','doc','the','an','in','on','at','is','it','so','no','ok','hi','my','me','of','to','a','q','ex','pa']);
+const NICK={kathryn:['kate','kathy','katie'],katherine:['kate','kathy','katie'],michael:['mike','mikey'],robert:['rob','bob','bobby'],william:['will','bill','billy'],elizabeth:['liz','beth','lizzy'],richard:['rick','rich'],james:['jim','jimmy'],joseph:['joe','joey'],thomas:['tom','tommy'],charles:['charlie','chuck'],christopher:['chris'],daniel:['dan','danny'],matthew:['matt'],nicholas:['nick'],anthony:['tony'],jennifer:['jen','jenny'],jessica:['jess'],rebecca:['becca','becky'],samuel:['sam'],benjamin:['ben'],alexander:['alex'],patricia:['pat','patty'],margaret:['maggie','meg'],deborah:['deb','debbie']};
+const $ = s=>document.querySelector(s);
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let prev=Array.from({length:n+1},(_,j)=>j),cur=new Array(n+1);for(let i=1;i<=m;i++){cur[0]=i;for(let j=1;j<=n;j++){cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));}[prev,cur]=[cur,prev];}return prev[n];}
+function deriveAliases(name, extra){
+  const bare=name.replace(/^(dr\.?|mr\.?|ms\.?|mrs\.?)\s+/i,'').trim();
+  const parts=bare.split(/\s+/); const first=parts[0]; const lastTokens=parts.slice(1);
+  const al=new Set([name, bare, first, ...lastTokens]);
+  lastTokens.forEach(t=>{ if(t.includes('-')) t.split('-').forEach(p=>al.add(p)); });
+  (NICK[first.toLowerCase()]||[]).forEach(n=>al.add(n));
+  (extra||[]).forEach(a=>al.add(a));
+  const lastFlat=[...new Set(lastTokens.flatMap(t=>t.includes('-')?[t,...t.split('-')]:[t]))].filter(t=>t.length>=4);
+  return {aliases:[...al].map(a=>a.trim()).filter(Boolean), lastTokens:lastFlat};
+}
+// Accept a settings JSON ({roster:[{name,credential,offices,aliases}], sentimentKeywords:{positive,negative}}),
+// a bare JSON roster array, the Office/Name/Aliases CSV, or a credentialed .txt roster
+function parseRosterFlexible(filename, text){
+  const isJSON=/\.json$/i.test(filename) || /^\s*[\[{]/.test(text);
+  if(isJSON){
+    let data;
+    try{ data=JSON.parse(text); }
+    catch(e){ toast('Could not parse roster JSON: '+e.message); return []; }
+    if(data&&!Array.isArray(data)&&data.sentimentKeywords){
+      const kw=data.sentimentKeywords;
+      if(Array.isArray(kw.positive)&&kw.positive.length)POS=kw.positive.map(w=>String(w).trim().toLowerCase()).filter(Boolean);
+      if(Array.isArray(kw.negative)&&kw.negative.length)NEG=kw.negative.map(w=>String(w).trim().toLowerCase()).filter(Boolean);
+      renderKeywordStatus();
+    }
+    if(data&&!Array.isArray(data)&&data.categories&&typeof data.categories==='object'){
+      const cats={};
+      Object.entries(data.categories).forEach(([name,words])=>{
+        if(Array.isArray(words)&&words.length)cats[name]=words.map(w=>String(w).trim().toLowerCase()).filter(Boolean);
+      });
+      if(Object.keys(cats).length)CATEGORIES=cats;
+    }
+    if(data&&!Array.isArray(data)&&Array.isArray(data.stopwords)&&data.stopwords.length){
+      STOPWORDS=data.stopwords.map(w=>String(w).trim().toLowerCase()).filter(Boolean);
+    }
+    if(data&&!Array.isArray(data)&&data.reviewLinks&&typeof data.reviewLinks==='object'){
+      REVIEW_LINKS=data.reviewLinks; // not used here -- kept only so re-exporting settings doesn't drop it
+    }
+    const list=Array.isArray(data)?data:(data.staff||data.roster||[]);
+    const objs=[];
+    list.forEach(p=>{
+      const name=(p.name||p.Name||'').trim(); if(!name)return;
+      const credential=(p.credential||p.Credential||'').trim();
+      const offices=Array.isArray(p.offices)?p.offices:(p.office?[p.office]:(p.Office?[p.Office]:[]));
+      const aliases=Array.isArray(p.aliases)?p.aliases:(p.Aliases?String(p.Aliases).split(/[|;]/):[]);
+      (offices.length?offices:['Office 1']).forEach(office=>{
+        objs.push({Office:String(office).trim(),Name:name,Credential:credential,Aliases:aliases.filter(Boolean).join('|')});
+      });
+    });
+    return objs;
+  }
+  const isCSV=/\.csv$/i.test(filename);
+  if(isCSV){
+    const {rows}=parseCSV(text);
+    if(rows.length && (('Office' in rows[0])||('office' in rows[0]))) return rows;
+  }
+  const CRED=/\b(MD|DO|PhD|FNP-?C?|PA-?C?|APRN|FACMS|FAAD|RN|NP|MSN|MS|DNP)\b/gi;
+  const objs=[]; let cur=null;
+  text.replace(/\r/g,'').split('\n').forEach(line=>{
+    const l=line.trim(); if(!l) return;
+    if(/\boffice\s*$/i.test(l) && l.split(/\s+/).length<=4){ cur=l.replace(/\s+office\s*$/i,'').trim(); return; }
+    if(!cur) cur='Office 1';
+    l.split(/[;]/).map(s=>s.trim()).filter(Boolean).forEach(part=>{
+      const cred=(part.match(CRED)||[]).join(', ');
+      const nm=part.split(',')[0].replace(CRED,'').replace(/\s+/g,' ').trim();
+      if(nm && /[A-Za-z]{2,}/.test(nm)) objs.push({Office:cur, Name:nm, Credential:cred, Aliases:''});
+    });
+  });
+  return objs;
+}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(window.__t);window.__t=setTimeout(()=>t.style.opacity=0,1900);}
+
+/* ---------------- CSV parser (quoted fields, commas + newlines) ---------------- */
+function parseCSV(text){
+  text=text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const rows=[];let row=[],field='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else q=false; }
+      else field+=c;
+    }else{
+      if(c==='"')q=true;
+      else if(c===','){row.push(field);field='';}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  if(field.length||row.length){row.push(field);rows.push(row);}
+  if(!rows.length)return {header:[],rows:[]};
+  const header=rows.shift().map(h=>h.trim());
+  const objs=rows.filter(r=>r.some(c=>c.trim()!=='')).map(r=>{
+    const o={};header.forEach((h,i)=>o[h]=(r[i]??'').trim());return o;
+  });
+  return {header, rows:objs};
+}
+function normOffice(s){return s.toLowerCase().replace(/\.(csv|CSV)$/,'').replace(/[^a-z0-9]+/g,' ').replace(/\b(office|clinic|location|derm|dermatology)\b/g,'').trim();}
+
+/* ---------------- roster ---------------- */
+function indexOffice(o){
+  o.aliasIndex=new Map(); o.collisions=[]; o.warnings=[];
+  o.staff.forEach(st=>{
+    st.aliases.forEach(a=>{
+      const key=a.toLowerCase();
+      if(!o.aliasIndex.has(key))o.aliasIndex.set(key,[]);
+      if(!o.aliasIndex.get(key).includes(st.id))o.aliasIndex.get(key).push(st.id);
+      const bare=a.replace(/[^a-z0-9]/gi,'');
+      if(bare.length<=2)o.warnings.push({type:'short',alias:a,who:st.canonical});
+      else if(COMMON_WORDS.has(key))o.warnings.push({type:'word',alias:a,who:st.canonical});
+    });
+  });
+  o.aliasIndex.forEach((ids,key)=>{ if(ids.length>1)o.collisions.push({alias:key,ids:ids.slice()}); });
+}
+function buildRoster(objs){
+  const offices={};
+  objs.forEach((o,idx)=>{
+    const office=(o.Office||o.office||'').trim();
+    const name=(o.Name||o.name||o.Staff||o['Staff Name']||'').trim();
+    if(!office||!name)return;
+    const credential=(o.Credential||o.credential||'').trim();
+    const aliasRaw=(o.Aliases||o.aliases||o.Alias||'').trim();
+    const extra=aliasRaw?aliasRaw.split(/[|;]/).map(a=>a.trim()).filter(Boolean):[];
+    const {aliases,lastTokens}=deriveAliases(name, extra);
+    if(!offices[office])offices[office]={staff:[],aliasIndex:new Map(),collisions:[],warnings:[],fuzzy:true};
+    offices[office].staff.push({id:'s'+idx,canonical:name,credential,aliases,lastTokens});
+  });
+  Object.values(offices).forEach(indexOffice);
+  return {offices};
+}
+function renderRosterReport(){
+  const el=$('#roster-report');if(!S.roster){el.innerHTML='';return;}
+  const offs=Object.entries(S.roster.offices);
+  let parts=[`<div class="callout" style="margin-top:14px"><b>${offs.length}</b> office(s), <b>${offs.reduce((n,[,o])=>n+o.staff.length,0)}</b> staff loaded.</div>`];
+  offs.forEach(([name,o])=>{
+    if(o.collisions.length){
+      const names=o.collisions.map(c=>`"${c.alias}" → ${c.ids.map(id=>o.staff.find(s=>s.id===id).canonical).join(' / ')}`).join('; ');
+      parts.push(`<div class="callout warn" style="margin-top:10px"><b>Ambiguous alias in ${name}.</b> ${names}. Reviews using these will be routed to a manual-assign bucket rather than guessed.</div>`);
+    }
+    const weak=o.warnings;
+    if(weak.length){
+      const w=weak.map(x=>`"${x.alias}" (${x.who})`).join(', ');
+      parts.push(`<div class="callout warn" style="margin-top:10px"><b>Weak aliases in ${name}.</b> ${w} — very short or common words. Matched only on whole-word boundaries to limit false hits, but worth double-checking.</div>`);
+    }
+  });
+  offs.forEach(([name,o])=>parts.push(renderStaffAliasBlock(name,o)));
+  el.innerHTML=parts.join('');
+}
+let openAliasIds=new Set(); // remembers which staff alias panels are expanded across re-renders
+function renderStaffAliasBlock(office,o){
+  const offEsc=office.replace(/'/g,"\\'");
+  const staffHtml=o.staff.map(st=>{
+    const chips=st.aliases.map(a=>
+      `<span class="filechip">${escapeHtml(a)}<button class="x" onclick="removeAlias('${offEsc}','${st.id}','${a.replace(/'/g,"\\'")}')">✕</button></span>`
+    ).join('');
+    const inputId=`alias-in-${st.id}`;
+    const n=st.aliases.length;
+    return `<details style="padding:8px 0;border-bottom:1px solid #edf0f3" ${openAliasIds.has(st.id)?'open':''} ontoggle="this.open?openAliasIds.add('${st.id}'):openAliasIds.delete('${st.id}')">
+      <summary style="cursor:pointer;font-weight:900;padding:4px 0">${escapeHtml(st.canonical)} <span class="mini" style="font-weight:700">· ${n} alias${n===1?'':'es'}</span></summary>
+      <div class="row" style="justify-content:flex-end;gap:6px;margin-top:8px">
+        <input class="sel" id="${inputId}" placeholder="add alias…" style="width:140px" onkeydown="if(event.key==='Enter'){addAlias('${offEsc}','${st.id}')}">
+        <button class="btn sm ghost" onclick="addAlias('${offEsc}','${st.id}')">+ add</button>
+      </div>
+      <div style="margin-top:6px">${chips||'<span class="mini">no aliases yet</span>'}</div>
+    </details>`;
+  }).join('');
+  return `<div class="card pad" style="margin-top:12px">
+    <h3>Aliases · ${escapeHtml(office)}</h3>
+    <p class="hint">First/last name and known nicknames are added automatically. Add anything else the matcher should catch — maiden names, unusual nicknames, common misspellings.</p>
+    ${staffHtml}
+  </div>`;
+}
+function addAlias(office,staffId){
+  const o=S.roster.offices[office]; const st=o&&o.staff.find(s=>s.id===staffId); if(!st)return;
+  const input=document.getElementById('alias-in-'+staffId);
+  const val=(input.value||'').trim(); if(!val)return;
+  if(st.aliases.some(a=>a.toLowerCase()===val.toLowerCase())){toast('Already an alias for '+st.canonical);input.value='';return;}
+  st.aliases.push(val);
+  indexOffice(o);
+  renderRosterReport();
+  toast('"'+val+'" added as alias for '+st.canonical);
+}
+function removeAlias(office,staffId,alias){
+  const o=S.roster.offices[office]; const st=o&&o.staff.find(s=>s.id===staffId); if(!st)return;
+  st.aliases=st.aliases.filter(a=>a!==alias);
+  indexOffice(o);
+  renderRosterReport();
+  toast('Removed "'+alias+'"');
+}
+
+/* ---------------- name matching ---------------- */
+function esc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function honorificTokens(text){
+  const out=[];const re=/(?:[Dd][Rr]|[Mm][Rr][Ss]|[Mm][Ss]|[Mm][Rr])\.?\s+([A-Z][a-zA-Z'’\-]{2,})/g;let m;
+  while(m=re.exec(text)){ out.push(m[1].replace(/[’'`]s?$/,'')); }
+  return out;
+}
+function findMatches(text, office){
+  const o=S.roster.offices[office];if(!o)return [];
+  const found={}; // staffId -> {matchedAlias, ambiguous, fuzzy}
+  o.aliasIndex.forEach((ids,alias)=>{
+    const re=new RegExp('(?<![A-Za-z])'+esc(alias)+'(?![A-Za-z])','i');
+    if(re.test(text)){
+      if(ids.length>1){ ids.forEach(id=>{found[id]=found[id]||{matchedAlias:alias,ambiguous:true,fuzzy:false};found[id].ambiguous=true;}); }
+      else { const id=ids[0]; if(!found[id]||!found[id].ambiguous) found[id]={matchedAlias:alias,ambiguous:false,fuzzy:false}; }
+    }
+  });
+  // fuzzy pass: honorific-preceded tokens close to a staff last name (catches misspellings)
+  if(o.fuzzy!==false){
+    honorificTokens(text).forEach(tok=>{
+      const tl=tok.toLowerCase();
+      if(o.aliasIndex.has(tl))return;                 // exact alias already handled
+      o.staff.forEach(st=>{
+        if(found[st.id])return;
+        st.lastTokens.forEach(ln=>{
+          const lnl=ln.toLowerCase();
+          if(Math.abs(lnl.length-tl.length)>2)return;
+          const d=lev(tl,lnl), thr=lnl.length>=7?2:1;
+          if(d>0&&d<=thr&&!found[st.id]) found[st.id]={matchedAlias:tok+' ≈ '+ln, ambiguous:false, fuzzy:true};
+        });
+      });
+    });
+  }
+  return Object.entries(found).map(([id,info])=>{
+    const st=o.staff.find(s=>s.id===id);
+    return {staffId:id,name:st.canonical,matchedAlias:info.matchedAlias,ambiguous:info.ambiguous,fuzzy:!!info.fuzzy};
+  });
+}
+function scanCoverage(office){
+  const texts=[];
+  S.reconcile.filter(rc=>rc.matched===office&&rc.status!=='unmatched').forEach(rc=>{
+    const f=S.reviewFiles.find(x=>x.name===rc.fileName); if(f)f.rows.forEach(r=>texts.push(r.Review||r.review||''));
+  });
+  const o=S.roster.offices[office]; const per={}; o.staff.forEach(s=>per[s.id]=0); const gaps={};
+  texts.forEach(t=>{
+    const m=findMatches(t,office); m.forEach(x=>per[x.staffId]++);
+    honorificTokens(t).forEach(tok=>{
+      const tl=tok.toLowerCase();
+      const matched=o.aliasIndex.has(tl)||m.some(x=>x.fuzzy&&x.matchedAlias.toLowerCase().startsWith(tl));
+      if(!matched)gaps[tok]=(gaps[tok]||0)+1;
+    });
+  });
+  return {
+    perPerson:o.staff.map(s=>({name:s.canonical,count:per[s.id]})).sort((a,b)=>b.count-a.count),
+    gapList:Object.entries(gaps).filter(([n,c])=>c>=2&&n.length>=3).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count)
+  };
+}
+function addStaff(office,name){
+  const o=S.roster.offices[office]; if(!o)return;
+  const {aliases,lastTokens}=deriveAliases(name,[]);
+  o.staff.push({id:'x'+Date.now()+Math.floor(Math.random()*99),canonical:name,credential:'',aliases,lastTokens});
+  indexOffice(o); renderCoverage(); toast(name+' added to '+office);
+}
+function addAliasFromGap(office,staffId,alias){
+  const o=S.roster.offices[office]; const st=o&&o.staff.find(s=>s.id===staffId); if(!st)return;
+  if(st.aliases.some(a=>a.toLowerCase()===alias.toLowerCase())){toast('Already an alias');return;}
+  st.aliases.push(alias);
+  indexOffice(o);
+  renderCoverage();
+  toast('"'+alias+'" added as alias for '+st.canonical);
+}
+function renderCoverage(){
+  const offices=[...new Set(S.reconcile.filter(r=>r.matched&&r.status!=='unmatched').map(r=>r.matched))];
+  if(!offices.length){$('#coverage-panel').innerHTML='';return;}
+  let html='';
+  offices.forEach(off=>{
+    const {perPerson,gapList}=scanCoverage(off);
+    const maxc=Math.max(1,...perPerson.map(p=>p.count));
+    html+=`<div class="card pad" style="margin-bottom:14px"><h3>Roster coverage · ${off}</h3><p class="hint">Reviews naming each person (exact + auto-matched spellings & nicknames), before sentiment.</p>`;
+    html+=perPerson.map(p=>`<div class="cov-row"><span class="cov-name">${p.name}</span><span class="cov-bar"><i style="width:${p.count/maxc*100}%"></i></span><b>${p.count}</b></div>`).join('');
+    if(gapList.length){
+      const offEsc=off.replace(/'/g,"\\'");
+      const staffOpts=`<option value="">alias of…</option>`+S.roster.offices[off].staff.map(s=>`<option value="${s.id}">${escapeHtml(s.canonical)}</option>`).join('');
+      html+=`<div class="callout warn" style="margin-top:12px"><b>Named but not in this roster.</b> These "Dr. X" names recur and match no one — either a new provider, or an alias/misspelling of someone already listed (typos are already auto-handled).<div style="margin-top:8px">`+
+        gapList.map(g=>{
+          const gEsc=g.name.replace(/'/g,"\\'");
+          return `<span class="filechip">${escapeHtml(g.name)} · ${g.count}×
+            <button class="btn sm primary" style="padding:3px 8px;margin-left:6px" onclick="addStaff('${offEsc}','${gEsc}')">+ new</button>
+            <select class="sel" style="margin-left:4px;padding:3px 6px" onchange="if(this.value){addAliasFromGap('${offEsc}',this.value,'${gEsc}');this.value=''}">${staffOpts}</select>
+          </span>`;
+        }).join('')+`</div></div>`;
+    }
+    html+='</div>';
+  });
+  $('#coverage-panel').innerHTML=html;
+}
+function selfIntro(text,alias){
+  const a=esc(alias);
+  return new RegExp("(i'?m|i am|my name is|this is)\\s+"+a+"(?![A-Za-z])","i").test(text)
+      || new RegExp("(?<![A-Za-z])"+a+"\\s+here\\b","i").test(text);
+}
+
+/* ---------------- sentiment: rules fallback ---------------- */
+let POS=['great','fantastic','wonderful','kind','patient','lovely','amazing','friendly','professional','thorough','helpful','calm','best','easy','comfortable','clear','warm','caring','excellent','remembers','remembered','recommend','clean','love','loved','at ease','took the time'];
+let NEG=['rude','rushed','cold','dismissive','long wait','too long','bad','worst','ignored','impatient','unprofessional','waited','wait','barely','not return',"wouldn't return",'awful','terrible','poor','slow','left'];
+const DEFAULT_POS=[...POS], DEFAULT_NEG=[...NEG];
+// Topic categories -- what a review is ABOUT, independent of sentiment (a review can be
+// positive or negative about the same theme). Keywords grounded in real word-frequency
+// counts across the Norwalk/Shelton datasets, not guessed.
+let CATEGORIES={
+  'Wait Time & Scheduling':['wait','waited','waiting','minutes','appointment','rushed','reschedul','cancel','on time','late','quick'],
+  'Front Desk & Billing':['front desk','receptionist','insurance','billing','credit card','deposit','paperwork','co-pay','copay','phone','voicemail','call'],
+  'Bedside Manner & Communication':['explained','questions','concerns','kind','caring','attentive','manner','bedside','personable','comfortable','at ease','courteous','welcoming','listens','friendly','nice','pleasant','polite'],
+  'Clinical Skill & Expertise':['knowledgeable','thorough','treatment','diagnos','exam','options','dermatologist','expert'],
+  'Facility & Cleanliness':['clean','spotless','parking','waiting room','office was']
+};
+const DEFAULT_CATEGORIES=JSON.parse(JSON.stringify(CATEGORIES));
+function detectCategories(text){
+  const low=(text||'').toLowerCase();
+  return Object.entries(CATEGORIES).filter(([,words])=>words.some(w=>low.includes(w))).map(([cat])=>cat);
+}
+// Common-word exclusion list for the profile's "top words" metric. Editable via Settings.json's
+// `stopwords` array, same load/export path as sentimentKeywords and categories.
+let STOPWORDS=['the','a','an','and','or','but','is','was','were','are','be','been','being','to','of','in','on','at',
+  'for','with','as','by','it',"it's",'its','this','that','these','those','i','me','my','we','our','us','you','your',
+  'he','him','his','she','her','they','them','their','so','very','just','not','no','do','did','does','doing','have',
+  'has','had','will','would','can','could','should','from','about','all','out','up','get','got','went','when','then',
+  'than','if','because','also','more','most','some','who','what','which','there','here','over','into','after','before',
+  'during','only','such','both','each','how','why','again','once','off','down','same','too','own','still','were',
+  'am','been','being','doctor','staff','office','visit','time','experience','one','really','always','every'];
+const DEFAULT_STOPWORDS=[...STOPWORDS];
+let REVIEW_LINKS={}; // {officeName: googleReviewUrl} -- managed by request-review.html, just passed through here
+function sameList(a,b){return a.length===b.length&&a.every((w,i)=>w===b[i]);}
+function pickKeywords(which){$('#file-'+which).click();}
+function parseKeywordFile(text){return text.replace(/\r/g,'').split('\n').map(l=>l.trim().toLowerCase()).filter(l=>l&&!l.startsWith('#'));}
+function loadKeywords(which,file){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const words=parseKeywordFile(rd.result);
+    if(!words.length){toast('No keywords found in '+file.name);return;}
+    if(which==='pos')POS=words; else NEG=words;
+    renderKeywordStatus();
+    toast(`Loaded ${words.length} ${which==='pos'?'positive':'negative'} keyword(s) from ${file.name}`);
+  };
+  rd.readAsText(file);
+}
+function resetKeywords(which){
+  if(which==='pos')POS=[...DEFAULT_POS]; else NEG=[...DEFAULT_NEG];
+  renderKeywordStatus();
+  toast('Reset to default '+(which==='pos'?'positive':'negative')+' list');
+}
+function downloadKeywords(which){
+  const arr=which==='pos'?POS:NEG;
+  const blob=new Blob([arr.join('\n')],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=(which==='pos'?'positive':'negative')+'-keywords.txt';a.click();URL.revokeObjectURL(url);
+}
+function renderKeywordStatus(){
+  const posCustom=!sameList(POS,DEFAULT_POS), negCustom=!sameList(NEG,DEFAULT_NEG);
+  $('#posWordCount').textContent=`${POS.length} ${posCustom?'custom':'default'}`;
+  $('#negWordCount').textContent=`${NEG.length} ${negCustom?'custom':'default'}`;
+  $('#posResetBtn').style.display=posCustom?'':'none';
+  $('#negResetBtn').style.display=negCustom?'':'none';
+}
+
+/* ---------------- combined settings file (roster + aliases + sentiment keywords) ---------------- */
+function buildSettingsPayload(){
+  const people=new Map(); // canonical name -> {name,credential,offices:[],aliasSet:Set}
+  if(S.roster){
+    Object.entries(S.roster.offices).forEach(([office,o])=>{
+      o.staff.forEach(st=>{
+        if(!people.has(st.canonical))people.set(st.canonical,{name:st.canonical,credential:st.credential||'',offices:[],aliasSet:new Set()});
+        const p=people.get(st.canonical);
+        if(!p.offices.includes(office))p.offices.push(office);
+        if(st.credential)p.credential=st.credential;
+        const {aliases:auto}=deriveAliases(st.canonical,[]);
+        const autoSet=new Set(auto.map(a=>a.toLowerCase()));
+        st.aliases.forEach(a=>{ if(!autoSet.has(a.toLowerCase()))p.aliasSet.add(a); });
+      });
+    });
+  }
+  const roster=[...people.values()].map(p=>({name:p.name,credential:p.credential,offices:p.offices,aliases:[...p.aliasSet]}));
+  return {roster, sentimentKeywords:{positive:POS,negative:NEG}, categories:CATEGORIES, stopwords:STOPWORDS, reviewLinks:REVIEW_LINKS};
+}
+function downloadSettings(){
+  if(!S.roster){toast('Load a roster first');return;}
+  const payload=buildSettingsPayload();
+  saveSettingsToStorage(payload);
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='Settings.json';a.click();URL.revokeObjectURL(url);
+  toast('Exported Settings.json (roster + aliases + keyword lists + categories)');
+}
+function clauses(text){
+  const safe=text.replace(/\b(dr|mr|mrs|ms|prof|st)\./gi,'$1\u0001'); // shield abbrev periods
+  return safe.split(/(?<=[.!?;])\s+|,\s+|\bbut\b|\bhowever\b|\balthough\b|\bthough\b|\byet\b/i)
+    .map(s=>s.replace(/\u0001/g,'.').trim()).filter(Boolean);
+}
+function rulesSentiment(text, match, soloMatch){
+  const cls=clauses(text);
+  const token=String(match.matchedAlias).split(' ≈ ')[0]; // fuzzy display -> real token
+  const re=new RegExp('(?<![A-Za-z])'+esc(token)+'(?![A-Za-z])','i');
+  let hosts=cls.filter(c=>re.test(c)); // every clause naming this person, not just the first
+  if(!hosts.length){ const mm=text.match(re); hosts=mm?[text.slice(Math.max(0,mm.index-50),mm.index+70)]:[text]; }
+  let low=hosts.join(' ').toLowerCase();
+  let p=POS.reduce((n,w)=>n+(low.includes(w)?1:0),0);
+  let n=NEG.reduce((k,w)=>k+(low.includes(w)?1:0),0);
+  // If they're the only person named in the whole review and their own clause(s) carry no
+  // lexicon hits, widen to the full text rather than default to a bare "neutral" guess --
+  // with nobody else named, the rest of the review's sentiment is fairly attributable to them.
+  // Multi-person reviews never widen, since that's exactly what keeps "Mike was great, Sarah
+  // was rude" separated.
+  let widened=false;
+  if(soloMatch && p===0 && n===0){
+    low=text.toLowerCase();
+    p=POS.reduce((n,w)=>n+(low.includes(w)?1:0),0);
+    n=NEG.reduce((k,w)=>k+(low.includes(w)?1:0),0);
+    widened=p>0||n>0;
+  }
+  // naive sarcasm cue
+  const sarcasm=/so helpful.*(wait|minute)|\bthanks a lot\b|🙄/i.test(text);
+  if(sarcasm){n+=2;}
+  let sentiment,score;
+  if(p>n){sentiment='positive';score=p>=2?5:4;}
+  else if(n>p){sentiment='negative';score=n>=2?1:2;}
+  else {sentiment='neutral';score=3;}
+  // Confidence tracks match strength: how one-sided the keyword evidence was (margin
+  // between pos/neg hits), plus a small nudge for having any evidence at all -- a tie
+  // (contradictory or absent evidence) stays low even though it's "resolved" to neutral.
+  // Then discounted for anything that makes the match itself shaky.
+  const margin=Math.abs(p-n), totalHits=p+n;
+  let conf=0.32 + Math.min(margin,2)*0.25 + (totalHits>0?0.05:0);
+  if(match.fuzzy)conf*=0.7;      // name matched via a misspelling guess, not an exact alias
+  if(match.ambiguous)conf*=0.5;  // could be the wrong person entirely
+  if(sarcasm)conf=Math.min(conf,0.4);
+  conf=Math.max(0.15,Math.min(0.75,conf)); // rules are never near-certain, even at their best
+  const rationale=`Rule-based (clause proximity${widened?", widened to the full review since they're the only person named":''}, ${p} positive / ${n} negative keyword hit(s)).`;
+  if(selfIntro(text,match.matchedAlias)){sentiment='neutral';conf=0.15;}
+  return {sentiment,score,confidence:Math.round(conf*100)/100,rationale,isActuallyStaff:!selfIntro(text,match.matchedAlias)};
+}
+
+/* ---------------- sentiment: Claude ---------------- */
+async function claudeSentiment(text, matches, overall){
+  const names=matches.map(m=>m.name);
+  const sys="You attribute customer-review sentiment to specific named staff members. Reply with ONLY a JSON array, no prose, no markdown. For each candidate name return an object: {name, directedSentiment:'positive'|'negative'|'neutral'|'mixed', score:1-5 (how the reviewer feels about THIS person specifically, NOT the overall visit), confidence:0-1, isActuallyStaff:boolean (false if the name refers to the reviewer themself or is not the staff member), rationale:short string}. Account for contrast (praise one, fault another), pronouns, sarcasm, and self-introductions.";
+  const usr=`Overall visit rating: ${overall||'n/a'} of 5.\nCandidate staff names found in the review: ${names.join(', ')}.\nReview text:\n"""${text}"""\nReturn the JSON array now.`;
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:sys,messages:[{role:"user",content:usr}]})
+  });
+  if(!res.ok)throw new Error("api "+res.status);
+  const data=await res.json();
+  const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
+  const arr=JSON.parse(raw);
+  const byName={};arr.forEach(o=>byName[(o.name||'').toLowerCase()]=o);
+  return matches.map(m=>{
+    const o=byName[m.name.toLowerCase()]||arr[0]||{};
+    let s=o.directedSentiment||'neutral';
+    return {
+      sentiment:s==='mixed'?'mixed':(s||'neutral'),
+      score:Math.max(1,Math.min(5,Math.round(o.score||3))),
+      confidence:typeof o.confidence==='number'?o.confidence:0.6,
+      rationale:o.rationale||'',
+      isActuallyStaff:o.isActuallyStaff!==false
+    };
+  });
+}
+
+/* ---------------- run attribution ---------------- */
+async function runAttribution(){
+  const engine=$('#engine').value;
+  const useClaude=engine!=='rules';
+  S.attributions=[];
+  // gather reviews for matched offices
+  const jobs=[];
+  S.reconcile.forEach(rc=>{
+    if(rc.status!=='matched'||!rc.matched)return;
+    const file=S.reviewFiles.find(f=>f.name===rc.fileName);
+    file.rows.forEach((r,i)=>{
+      jobs.push({office:rc.matched,reviewer:r.Reviewer||r.reviewer||'—',
+        overall:parseFloat(r.Rating||r.rating)||null,
+        approx:(r.ApproxDate||r.approxDate||r.Date||'').slice(0,7),
+        text:r.Review||r.review||'',rowId:rc.fileName+'#'+i});
+    });
+  });
+  const prog=$('#prog');prog.style.display='block';prog.querySelector('i').style.width='0%';
+  $('#runBtn').disabled=true;
+  let done=0,claudeFails=0;
+  for(const j of jobs){
+    const matches=findMatches(j.text,j.office);
+    const categories=detectCategories(j.text);
+    let people=[],bucket,needs=false;
+    if(!matches.length){bucket='company';}
+    else{
+      const solo=matches.length===1;
+      let scored;
+      if(useClaude){
+        try{scored=await claudeSentiment(j.text,matches,j.overall);}
+        catch(e){claudeFails++;scored=matches.map(m=>rulesSentiment(j.text,m,solo));}
+      }else{scored=matches.map(m=>rulesSentiment(j.text,m,solo));}
+      people=matches.map((m,k)=>{
+        const sc=scored[k]||rulesSentiment(j.text,m,solo);
+        const flags=[];
+        if(m.ambiguous)flags.push('ambiguous');
+        if(m.fuzzy)flags.push('fuzzy');
+        if(sc.confidence<0.6)flags.push('low-confidence');
+        if(sc.isActuallyStaff===false)flags.push('self-mention');
+        if(j.overall!=null&&((j.overall<=2&&sc.sentiment==='positive')||(j.overall>=4&&sc.sentiment==='negative')))flags.push('star-mismatch');
+        return {...m,...sc,flags,method:useClaude&&!scored.__rules?'claude':'rules'};
+      });
+      bucket=(matches.some(m=>m.ambiguous))?'ambiguous':'attributed';
+      needs=people.some(p=>p.flags.length)||matches.length>1;
+    }
+    S.attributions.push({...j,people,bucket,needsReview:needs,confirmed:false,categories});
+    done++;prog.querySelector('i').style.width=Math.round(done/jobs.length*100)+'%';
+    $('#run-status').innerHTML=`<span class="spin"></span> ${done}/${jobs.length} reviews`;
+  }
+  $('#run-status').textContent=`Done — ${jobs.length} reviews processed`+(claudeFails?` (${claudeFails} fell back to rules)`:'');
+  $('#runBtn').disabled=false;$('#toReview').disabled=false;
+  renderAttrSummary(claudeFails);
+  markStep('attribute',true);
+}
+function renderAttrSummary(fails){
+  const a=S.attributions;
+  const att=a.filter(x=>x.bucket==='attributed').length;
+  const comp=a.filter(x=>x.bucket==='company').length;
+  const amb=a.filter(x=>x.bucket==='ambiguous').length;
+  const multi=a.filter(x=>x.people.length>1).length;
+  const flags=a.filter(x=>x.needsReview).length;
+  $('#attr-summary').innerHTML=`
+    <div class="kpi-grid" style="margin-bottom:0">
+      <div class="kpi"><div class="v">${att}</div><div class="k">Attributed</div></div>
+      <div class="kpi"><div class="v">${comp}</div><div class="k">Company-wide</div></div>
+      <div class="kpi"><div class="v">${multi}</div><div class="k">Multi-person</div></div>
+      <div class="kpi"><div class="v">${flags}</div><div class="k">Need review</div></div>
+    </div>
+    ${amb?`<div class="callout warn" style="margin-top:12px">${amb} review(s) matched an ambiguous name and await manual assignment in the next step.</div>`:''}
+    ${fails?`<div class="callout" style="margin-top:12px">The model wasn't reachable for ${fails} review(s) — a rule-based estimate was used and flagged. This is expected when the file is opened outside Claude.</div>`:''}`;
+}
+
+/* ---------------- review queue ---------------- */
+function renderQueue(){
+  const filter=$('#queueFilter').value;
+  let list=S.attributions.slice();
+  if(filter==='flag')list=list.filter(a=>a.needsReview);
+  else if(filter==='company')list=list.filter(a=>a.bucket==='company');
+  const body=$('#queue-body');
+  if(!list.length){body.innerHTML='<div class="card pad">Nothing here.</div>';return;}
+  body.innerHTML=list.map(a=>{
+    const idx=S.attributions.indexOf(a);
+    const stars='★'.repeat(a.overall||0)+'☆'.repeat(5-(a.overall||0));
+    const flagged=a.needsReview;
+    let people;
+    if(a.bucket==='company'){
+      people=`<div class="mini">No staff named — counts toward the company-wide / unknown bucket.
+        <button class="btn sm ghost" onclick="reassignPrompt(${idx})">Assign to someone…</button></div>`;
+    }else{
+      people=a.people.map((p,pi)=>personRow(idx,pi,p,a.office)).join('');
+    }
+    return `<div class="rev-item ${flagged?'flag':''}">
+      <div class="rev-top">
+        <div><b>${a.reviewer}</b> · <span class="mini">${a.office} · ${a.approx||'date n/a'}</span></div>
+        <div class="row">
+          <span class="mini">Overall visit</span><span class="stars">${stars}</span>
+          ${flagged?'<span class="badge warn">needs review</span>':'<span class="badge ok">clear</span>'}
+        </div>
+      </div>
+      <div class="rev-text">${highlightKeywords(a.text)}</div>
+      ${a.categories&&a.categories.length?`<div class="row" style="margin:2px 0 8px">${a.categories.map(c=>`<span class="badge info">${c}</span>`).join('')}</div>`:''}
+      ${people}
+    </div>`;
+  }).join('');
+}
+function personRow(idx,pi,p,office){
+  const sMap={positive:'pos',negative:'neg',neutral:'neu',mixed:'mix'};
+  const opts=['positive','negative','neutral','mixed'].map(s=>`<option value="${s}" ${p.sentiment===s?'selected':''}>${s}</option>`).join('');
+  const staffOpts=S.roster.offices[office].staff.map(st=>`<option value="${st.id}" ${st.id===p.staffId?'selected':''}>${st.canonical}</option>`).join('')+`<option value="__company">↳ company-wide</option>`;
+  return `<div class="person-row">
+    <div>
+      <div class="who">${p.name} ${p.ambiguous?'<span class="badge warn">ambiguous</span>':''} ${p.fuzzy?'<span class="badge warn">auto-spelling</span>':''} ${p.flags.includes('self-mention')?'<span class="badge warn">maybe reviewer</span>':''} ${p.flags.includes('star-mismatch')?'<span class="badge danger">star mismatch</span>':''}</div>
+      <div class="rat">matched "${p.matchedAlias}" · ${p.method}${p.rationale?' · '+escapeHtml(p.rationale):''}</div>
+    </div>
+    <select class="sel" onchange="reassignStaff(${idx},${pi},this.value)">${staffOpts}</select>
+    <select class="sel" onchange="setSentiment(${idx},${pi},this.value)">${opts}</select>
+    <div><span class="senti ${sMap[p.sentiment]}">${p.score}/5</span> <span class="conf mini">conf ${(p.confidence*100|0)}%</span></div>
+  </div>`;
+}
+function setSentiment(i,pi,v){
+  const p=S.attributions[i].people[pi];p.sentiment=v;
+  p.score=v==='positive'?5:v==='negative'?1:v==='mixed'?3:3;
+  p.confidence=1;p.method='manual';p.flags=p.flags.filter(f=>f!=='low-confidence');
+  recomputeNeeds(i);toast('Updated');renderQueue();
+}
+function reassignStaff(i,pi,v){
+  const a=S.attributions[i];
+  if(v==='__company'){a.people.splice(pi,1);if(!a.people.length){a.bucket='company';}recomputeNeeds(i);renderQueue();toast('Moved to company-wide');return;}
+  const st=S.roster.offices[a.office].staff.find(s=>s.id===v);
+  a.people[pi].staffId=v;a.people[pi].name=st.canonical;a.people[pi].ambiguous=false;
+  a.people[pi].flags=a.people[pi].flags.filter(f=>f!=='ambiguous');a.people[pi].confidence=1;a.people[pi].method='manual';
+  if(!a.people.some(p=>p.ambiguous))a.bucket='attributed';
+  recomputeNeeds(i);renderQueue();toast('Reassigned');
+}
+function reassignPrompt(i){
+  const a=S.attributions[i];const st=S.roster.offices[a.office].staff;
+  const name=prompt('Assign this review to which staff member?\n'+st.map((s,k)=>`${k+1}. ${s.canonical}`).join('\n'));
+  const k=parseInt(name)-1;if(isNaN(k)||!st[k])return;
+  a.people=[{staffId:st[k].id,name:st[k].canonical,matchedAlias:'(manual)',ambiguous:false,sentiment:'neutral',score:3,confidence:1,method:'manual',flags:[],rationale:'Manually assigned'}];
+  a.bucket='attributed';recomputeNeeds(i);renderQueue();toast('Assigned');
+}
+function recomputeNeeds(i){const a=S.attributions[i];a.needsReview=a.people.some(p=>p.flags.length)||a.people.length>1&&!a.confirmed;}
+
+/* ---------------- dashboard ---------------- */
+function applyReviewFilters(rows){
+  const from=($('#filterFrom')&&$('#filterFrom').value)||'';
+  const to=($('#filterTo')&&$('#filterTo').value)||'';
+  const star=($('#filterStar')&&$('#filterStar').value)||'all';
+  const cat=($('#filterCategory')&&$('#filterCategory').value)||'all';
+  return rows.filter(a=>{
+    if(from&&(!a.approx||a.approx<from))return false;
+    if(to&&(!a.approx||a.approx>to))return false;
+    if(star!=='all'&&String(a.overall)!==star)return false;
+    if(cat!=='all'&&!(a.categories||[]).includes(cat))return false;
+    return true;
+  });
+}
+function filterMentionsBySentiment(mentions){
+  const s=($('#filterSentiment')&&$('#filterSentiment').value)||'all';
+  return s==='all'?mentions:mentions.filter(m=>m.sentiment===s);
+}
+function populateCategoryFilter(){
+  const sel=$('#filterCategory'); if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="all">All categories</option>'+Object.keys(CATEGORIES).map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+}
+function populateOfficeChecks(){
+  const el=$('#officeChecks'); if(!el)return;
+  const offices=Object.keys(S.roster.offices);
+  const key=offices.join('|');
+  if(el.dataset.builtFor===key)return; // preserve checked state across re-renders; only rebuild if the office list itself changed
+  el.dataset.builtFor=key;
+  el.innerHTML=offices.map(o=>`<label style="font-weight:800;cursor:pointer;white-space:nowrap"><input type="checkbox" value="${escapeHtml(o)}" checked onchange="renderDashboard()" style="margin-right:4px">${escapeHtml(o)}</label>`).join('');
+}
+function getSelectedOffices(){
+  const all=Object.keys(S.roster.offices);
+  const el=$('#officeChecks'); if(!el)return all;
+  const checked=[...el.querySelectorAll('input[type=checkbox]')].filter(b=>b.checked).map(b=>b.value);
+  return checked.length?checked:all; // unchecking everything would otherwise show an empty dashboard with no way back
+}
+// Staff are matched across offices by exact canonical name, not internal id, since the same
+// person has a separate per-office staff record (own id) -- see the roster data model.
+function populateStaffFilter(offices){
+  const sel=$('#filterStaff'); if(!sel)return;
+  const cur=sel.value;
+  const names=new Set();
+  offices.forEach(o=>{ if(S.roster.offices[o])S.roster.offices[o].staff.forEach(s=>names.add(s.canonical)); });
+  const sorted=[...names].sort();
+  sel.innerHTML='<option value="all">All staff</option>'+sorted.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur; else sel.value='all';
+}
+function clearDashFilters(){
+  ['filterFrom','filterTo'].forEach(id=>{ if($('#'+id))$('#'+id).value=''; });
+  if($('#filterStar'))$('#filterStar').value='all';
+  if($('#filterCategory'))$('#filterCategory').value='all';
+  if($('#filterSentiment'))$('#filterSentiment').value='all';
+  if($('#filterStaff'))$('#filterStaff').value='all';
+  renderDashboard();
+}
+let lastOfficeSelectionKey=null; // reset the staff filter when which offices are in scope changes --
+                                  // a name valid under the old selection may not exist under the new
+                                  // one, and leaving it selected would just silently show zero results.
+function renderDashboard(){
+  populateOfficeChecks();
+  const offices=getSelectedOffices();
+  const officeKey=offices.slice().sort().join('|');
+  const minN=parseInt($('#minN').value);
+  populateCategoryFilter();
+  if(officeKey!==lastOfficeSelectionKey){ if($('#filterStaff'))$('#filterStaff').value='all'; lastOfficeSelectionKey=officeKey; }
+  populateStaffFilter(offices);
+  const rows=applyReviewFilters(S.attributions.filter(a=>offices.includes(a.office)));
+  // Directory of every distinct person across the selected offices, keyed by canonical name
+  // (their per-office staff records have different internal ids, so name is the join key).
+  const staffDirectory=new Map(); // name -> {name,credential,offices:Set}
+  offices.forEach(o=>{
+    if(!S.roster.offices[o])return;
+    S.roster.offices[o].staff.forEach(s=>{
+      if(!staffDirectory.has(s.canonical))staffDirectory.set(s.canonical,{name:s.canonical,credential:s.credential||'',offices:new Set()});
+      staffDirectory.get(s.canonical).offices.add(o);
+    });
+  });
+  // gather per-person mentions (sentiment/staff filters narrow this, not `rows` -- they belong to a person's mention, not the whole review)
+  let mentions=[]; // {name,month,score,sentiment}
+  rows.forEach(a=>a.people.forEach(p=>mentions.push({name:p.name,month:a.approx,score:p.score,sentiment:p.sentiment})));
+  mentions=filterMentionsBySentiment(mentions);
+  const staffFilterName=($('#filterStaff')&&$('#filterStaff').value)||'all';
+  if(staffFilterName!=='all')mentions=mentions.filter(m=>m.name===staffFilterName);
+  const months=[...new Set(rows.map(a=>a.approx).filter(Boolean))].sort();
+  const companyRows=rows.filter(a=>a.bucket==='company');
+  const companyCount=companyRows.length;
+  const blankCount=companyRows.filter(a=>!a.text||!a.text.trim()).length;
+  const namelessCount=companyCount-blankCount;
+  const total=rows.length;
+  const locAvg=mentions.length?(mentions.reduce((s,m)=>s+m.score,0)/mentions.length):0;
+  const locLabel=offices.length>1?offices.join(' + '):offices[0];
+
+  // KPIs
+  let html=`<div class="kpi-grid">
+    <div class="kpi"><div class="v">${total}</div><div class="k">Reviews · ${escapeHtml(locLabel)}</div></div>
+    <div class="kpi"><div class="v">${mentions.length}</div><div class="k">Staff mentions</div></div>
+    <div class="kpi"><div class="v">${locAvg.toFixed(2)}</div><div class="k">Location avg (person-directed)</div></div>
+    <div class="kpi"><div class="v">${companyCount}</div><div class="k">Company-wide / unknown</div><div class="mini" style="margin-top:4px">${blankCount} no text · ${namelessCount} text, no name</div></div>
+  </div>`;
+
+  // monthly frequency bar
+  html+=`<div class="card pad" style="margin-bottom:16px"><h3>Mentions per month</h3><p class="hint">Volume of staff mentions over time. Dates are Google's relative timestamps, so monthly is the honest resolution.</p>${barChart(months,months.map(m=>mentions.filter(x=>x.month===m).length))}</div>`;
+
+  // topic categories -- what reviews are about, independent of sentiment
+  const catCounts={};
+  Object.keys(CATEGORIES).forEach(c=>catCounts[c]=0);
+  rows.forEach(a=>(a.categories||[]).forEach(c=>{ if(catCounts[c]!=null)catCounts[c]++; }));
+  const catEntries=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]);
+  const catMax=Math.max(1,...catEntries.map(([,c])=>c));
+  html+=`<div class="card pad" style="margin-bottom:16px"><h3>What reviews are about</h3><p class="hint">Topic themes detected in the review text (a review can touch more than one), independent of sentiment -- shows what patients actually talk about, not just how they feel about it. Counted across all ${total} reviews at ${offices.length>1?'these locations':'this location'}, named staff or not.</p>`+
+    catEntries.map(([cat,c])=>`<div class="cov-row"><span class="cov-name">${cat}</span><span class="cov-bar"><i style="width:${c/catMax*100}%"></i></span><b>${c}</b></div>`).join('')+
+    `</div>`;
+
+  // per-person cards
+  html+=`<div class="card pad"><h3>Per-person sentiment over time</h3><p class="hint">Each line is the monthly average sentiment <b>directed at that person</b> (1–5), against the dashed location average. Months below the mention threshold are drawn faded — too few reviews to read.</p>`;
+  const withMentions=[...staffDirectory.values()].map(dir=>({dir,ms:mentions.filter(m=>m.name===dir.name)})).filter(x=>x.ms.length);
+  if(!withMentions.length)html+='<div class="mini">No staff were named in these reviews yet.</div>';
+  withMentions.sort((a,b)=>b.ms.length-a.ms.length).forEach(({dir,ms})=>{
+    const pos=ms.filter(m=>m.sentiment==='positive').length;
+    const rate=Math.round(pos/ms.length*100);
+    const monthly=months.map(m=>{const mm=ms.filter(x=>x.month===m);return {month:m,n:mm.length,avg:mm.length?mm.reduce((s,x)=>s+x.score,0)/mm.length:null};});
+    const nameEsc=dir.name.replace(/'/g,"\\'");
+    const officeTag=dir.offices.size>1?` <span class="badge">${[...dir.offices].join(' + ')}</span>`:'';
+    html+=`<div class="person-card">
+      <div class="ph"><span class="nm" style="cursor:pointer" onclick="openProfile('${nameEsc}')" title="View profile">${escapeHtml(dir.name)}</span>${officeTag}
+        <span class="row">
+          <span class="badge info">${ms.length} mention${ms.length>1?'s':''}</span>
+          <span class="badge ${rate>=60?'ok':rate<=40?'danger':'warn'}">${rate}% positive</span>
+          <span class="badge">avg ${(ms.reduce((s,x)=>s+x.score,0)/ms.length).toFixed(2)}/5</span>
+          <button class="btn sm ghost" onclick="openProfile('${nameEsc}')">Profile →</button>
+        </span>
+      </div>
+      ${lineChart(months,monthly,locAvg,minN)}
+    </div>`;
+  });
+  html+=`<div class="legend"><span><i style="background:var(--purple2)"></i>Person monthly avg</span><span><i style="background:#c9cfd6"></i>Location avg</span><span><i style="background:#e9c98f"></i>Below threshold (n&lt;${minN})</span></div></div>`;
+  $('#dash-body').innerHTML=html;
+}
+const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function formatMonth(ym){
+  if(!ym||ym.indexOf('-')<0)return ym||'';
+  const [y,m]=ym.split('-');
+  const mi=parseInt(m,10)-1;
+  return MONTH_NAMES[mi]?`${MONTH_NAMES[mi]}-${y.slice(2)}`:ym;
+}
+function barChart(labels,values){
+  const W=Math.max(360,labels.length*76),H=156,pad=30,max=Math.max(1,...values);
+  const bw=(W-pad*2)/labels.length*0.6;
+  let bars=values.map((v,i)=>{
+    const x=pad+(i+0.5)*((W-pad*2)/labels.length),h=(v/max)*(H-pad*2),y=H-pad-h;
+    return `<rect x="${x-bw/2}" y="${y}" width="${bw}" height="${h}" rx="4" fill="var(--purple2)"/>
+      <text x="${x}" y="${y-6}" font-size="13" text-anchor="middle" fill="#687784">${v}</text>
+      <text x="${x}" y="${H-8}" font-size="13" text-anchor="middle" fill="#687784">${formatMonth(labels[i])}</text>`;
+  }).join('');
+  return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">${bars}</svg></div>`;
+}
+function lineChart(months,monthly,locAvg,minN){
+  const W=Math.max(460,months.length*86),H=200,pl=38,pr=26,pt=16,pb=30;
+  const x=i=>pl+ (months.length<=1? (W-pl-pr)/2 : i*((W-pl-pr)/(months.length-1)));
+  const y=v=>pt+(5-v)/4*(H-pt-pb);
+  // gridlines 1..5
+  let grid='';for(let v=1;v<=5;v++){grid+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="#eef1f5"/><text x="${pl-8}" y="${y(v)+4}" font-size="13" text-anchor="end" fill="#9aa5ae">${v}</text>`;}
+  // location avg dashed
+  grid+=`<line x1="${pl}" x2="${W-pr}" y1="${y(locAvg)}" y2="${y(locAvg)}" stroke="#c9cfd6" stroke-dasharray="5 4"/>`;
+  // line through valid (n>=minN) points
+  const pts=monthly.map((m,i)=>({...m,i})).filter(m=>m.avg!==null);
+  const strong=pts.filter(m=>m.n>=minN);
+  let path='';strong.forEach((m,k)=>{path+=(k?'L':'M')+x(m.i)+' '+y(m.avg)+' ';});
+  const line=strong.length>1?`<path d="${path}" fill="none" stroke="var(--purple2)" stroke-width="2.5"/>`:'';
+  const dots=pts.map(m=>{
+    const weak=m.n<minN;
+    return `<circle cx="${x(m.i)}" cy="${y(m.avg)}" r="${weak?3.5:5}" fill="${weak?'#e9c98f':'var(--purple2)'}" stroke="#fff" stroke-width="1.5"><title>${formatMonth(m.month)}: ${m.avg.toFixed(2)} (n=${m.n})</title></circle>`;
+  }).join('');
+  const xlab=months.map((mo,i)=>`<text x="${x(i)}" y="${H-10}" font-size="13" text-anchor="middle" fill="#687784">${formatMonth(mo)}</text>`).join('');
+  return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">${grid}${line}${dots}${xlab}</svg></div>`;
+}
+
+/* ---------------- per-person profile drill-down ---------------- */
+function openProfile(name){
+  const offices=getSelectedOffices();
+  let credential='',presentOffices=[];
+  offices.forEach(o=>{
+    const st=S.roster.offices[o]&&S.roster.offices[o].staff.find(s=>s.canonical===name);
+    if(st){ presentOffices.push(o); if(!credential)credential=st.credential||''; }
+  });
+  if(!presentOffices.length)return;
+  const rows=applyReviewFilters(S.attributions.filter(a=>offices.includes(a.office)));
+  const allMine=[]; // {a: attribution, p: this person's scored entry}
+  rows.forEach(a=>{ const p=a.people.find(x=>x.name===name); if(p)allMine.push({a,p}); });
+  const sentFilter=($('#filterSentiment')&&$('#filterSentiment').value)||'all';
+  const mine=sentFilter==='all'?allMine:allMine.filter(m=>m.p.sentiment===sentFilter);
+  const n=mine.length;
+  const pos=mine.filter(m=>m.p.sentiment==='positive').length;
+  const rate=n?Math.round(pos/n*100):0;
+  const avg=n?(mine.reduce((s,m)=>s+m.p.score,0)/n).toFixed(2):'—';
+  const months=[...new Set(mine.map(m=>m.a.approx).filter(Boolean))].sort();
+  const monthly=months.map(m=>{const mm=mine.filter(x=>x.a.approx===m);return {month:m,n:mm.length,avg:mm.length?mm.reduce((s,x)=>s+x.p.score,0)/mm.length:null};});
+  let locMentions=[];rows.forEach(a=>a.people.forEach(p=>locMentions.push({score:p.score,sentiment:p.sentiment})));
+  locMentions=filterMentionsBySentiment(locMentions);
+  const locAvg=locMentions.length?locMentions.reduce((s,m)=>s+m.score,0)/locMentions.length:0;
+  const minN=parseInt(($('#minN')&&$('#minN').value)||'2');
+
+  const catCounts={};
+  Object.keys(CATEGORIES).forEach(c=>catCounts[c]=0);
+  mine.forEach(m=>(m.a.categories||[]).forEach(c=>{ if(catCounts[c]!=null)catCounts[c]++; }));
+  const catEntries=Object.entries(catCounts).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
+  const catMax=Math.max(1,...catEntries.map(([,c])=>c));
+
+  const sMap={positive:'pos',negative:'neg',neutral:'neu',mixed:'mix'};
+  const reviewList=mine.slice().sort((a,b)=>(b.a.approx||'').localeCompare(a.a.approx||'')).map(({a,p})=>`
+    <div class="rev-item" style="margin-bottom:10px">
+      <div class="rev-top">
+        <div><b>${escapeHtml(a.reviewer)}</b> · <span class="mini">${presentOffices.length>1?escapeHtml(a.office)+' · ':''}${a.approx||'date n/a'}${a.overall?' · '+'★'.repeat(a.overall)+'☆'.repeat(5-a.overall):''}</span></div>
+        <div class="row"><span class="senti ${sMap[p.sentiment]}">${p.score}/5</span><span class="conf mini">conf ${(p.confidence*100|0)}%</span></div>
+      </div>
+      <div class="rev-text">${highlightKeywords(a.text)}</div>
+      <div class="mini">matched "${escapeHtml(p.matchedAlias)}" · ${p.method}${p.rationale?' · '+escapeHtml(p.rationale):''}${p.flags&&p.flags.length?' · flags: '+p.flags.join(', '):''}</div>
+    </div>`).join('');
+
+  // name/alias tokens to exclude from the "top words" metric, so a person's own name doesn't
+  // trivially dominate their own word list
+  const aliasSet=new Set(name.toLowerCase().split(/\s+/));
+  presentOffices.forEach(o=>{
+    const st=S.roster.offices[o].staff.find(s=>s.canonical===name);
+    if(st)st.aliases.forEach(a=>a.toLowerCase().split(/\s+/).forEach(t=>aliasSet.add(t)));
+  });
+  profileState={name,mine,aliasSet};
+
+  const officeLabel=presentOffices.join(' + ');
+  $('#profile-body').innerHTML=`
+    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">
+      <div>
+        <h2 style="margin:0;font-size:20px">${escapeHtml(name)}</h2>
+        <p class="mini" style="margin:4px 0 0">${escapeHtml(credential)}${credential?' · ':''}${escapeHtml(officeLabel)}</p>
+      </div>
+      <button class="btn sm ghost" onclick="closeProfile()">✕ Close</button>
+    </div>
+    <div class="kpi-grid" style="margin:16px 0 0">
+      <div class="kpi"><div class="v">${n}</div><div class="k">Mentions</div></div>
+      <div class="kpi"><div class="v">${rate}%</div><div class="k">Positive rate</div></div>
+      <div class="kpi"><div class="v">${avg}</div><div class="k">Avg score</div></div>
+    </div>
+    <div class="card pad" style="margin:16px 0"><h3>Sentiment over time</h3><p class="hint">Against the dashed ${escapeHtml(officeLabel)} average. Faded dots are months below the ${minN}-mention threshold.</p>${months.length?lineChart(months,monthly,locAvg,minN):'<div class="mini">Not enough dated mentions to chart yet.</div>'}</div>
+    ${catEntries.length?`<div class="card pad" style="margin-bottom:16px"><h3>What their reviews are about</h3><p class="hint">Topic themes from reviews that name ${escapeHtml(name)}.</p>${catEntries.map(([cat,c])=>`<div class="cov-row"><span class="cov-name">${cat}</span><span class="cov-bar"><i style="width:${c/catMax*100}%"></i></span><b>${c}</b></div>`).join('')}</div>`:''}
+    <div class="card pad" style="margin-bottom:16px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h3 style="margin:0">More metrics</h3>
+        <select class="sel" id="profileMetricSel" onchange="renderProfileMetric()">
+          <option value="words">Top words</option>
+          <option value="flags">Flags &amp; confidence</option>
+          <option value="stars">Star rating distribution</option>
+        </select>
+      </div>
+      <div id="profileMetricBody" style="margin-top:10px"></div>
+    </div>
+    <div class="card pad"><h3>Reviews mentioning ${escapeHtml(name)}</h3>${reviewList||'<div class="mini">No reviews yet — run attribution first.</div>'}</div>
+  `;
+  $('#profile-modal').style.display='flex';
+  renderProfileMetric();
+}
+function closeProfile(){$('#profile-modal').style.display='none';profileState=null;}
+let profileState=null;
+function renderProfileMetric(){
+  if(!profileState)return;
+  const sel=$('#profileMetricSel'),body=$('#profileMetricBody');
+  if(!sel||!body)return;
+  const {name,mine,aliasSet}=profileState;
+  if(sel.value==='words'){
+    const counts={};
+    mine.forEach(({a})=>{
+      (a.text||'').toLowerCase().replace(/[^a-z'\s]/g,' ').split(/\s+/).forEach(tok=>{
+        tok=tok.replace(/^'+|'+$/g,'');
+        if(tok.length<3||STOPWORDS.includes(tok)||aliasSet.has(tok))return;
+        counts[tok]=(counts[tok]||0)+1;
+      });
+    });
+    const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    const max=Math.max(1,...top.map(([,c])=>c));
+    body.innerHTML=top.length?
+      `<p class="hint" style="margin:0 0 8px">Most frequent words across ${mine.length} review(s) naming ${escapeHtml(name)} — common words and their own name excluded. Edit <code>stopwords</code> in Settings.json to tune this list.</p>`+
+      top.map(([w,c])=>`<div class="cov-row"><span class="cov-name">${escapeHtml(w)}</span><span class="cov-bar"><i style="width:${c/max*100}%"></i></span><b>${c}</b></div>`).join('')
+      :'<div class="mini">Not enough review text yet.</div>';
+  }else if(sel.value==='flags'){
+    const flagCounts={};let clean=0;
+    mine.forEach(({p})=>{
+      if(!p.flags||!p.flags.length){clean++;return;}
+      p.flags.forEach(f=>flagCounts[f]=(flagCounts[f]||0)+1);
+    });
+    const entries=Object.entries(flagCounts).sort((a,b)=>b[1]-a[1]);
+    const max=Math.max(1,clean,...entries.map(([,c])=>c));
+    const avgConf=mine.length?(mine.reduce((s,{p})=>s+p.confidence,0)/mine.length):0;
+    body.innerHTML=`<p class="hint" style="margin:0 0 8px">Why mentions were (or weren't) flagged for review. Average confidence: <b>${(avgConf*100).toFixed(0)}%</b>. A high fuzzy/ambiguous rate usually means an alias is missing.</p>`+
+      `<div class="cov-row"><span class="cov-name">Clean (no flags)</span><span class="cov-bar"><i style="width:${clean/max*100}%;background:var(--ok)"></i></span><b>${clean}</b></div>`+
+      (entries.length?entries.map(([f,c])=>`<div class="cov-row"><span class="cov-name">${f}</span><span class="cov-bar"><i style="width:${c/max*100}%"></i></span><b>${c}</b></div>`).join(''):'<div class="mini">No flags at all — every mention was clean.</div>');
+  }else if(sel.value==='stars'){
+    const counts=[0,0,0,0,0];
+    mine.forEach(({a})=>{ if(a.overall>=1&&a.overall<=5)counts[Math.round(a.overall)-1]++; });
+    body.innerHTML=`<p class="hint" style="margin:0 0 8px">Overall visit star rating on reviews naming ${escapeHtml(name)} — kept separate from their person-directed sentiment by design; use this to spot-check how often the two diverge.</p>`+
+      barChart(['1','2','3','4','5'],counts);
+  }
+}
+
+/* ---------------- reconcile ---------------- */
+function buildReconcile(){
+  const offices=Object.keys(S.roster.offices);
+  S.reconcile=S.reviewFiles.map(f=>{
+    const target=normOffice(f.name);
+    let matched=offices.find(o=>normOffice(o)===target);
+    let status=matched?'matched':'unmatched';
+    let near=!matched?offices.find(o=>normOffice(o).includes(target)||target.includes(normOffice(o))):null;
+    if(!matched&&near){matched=near;status='near';}
+    return {fileName:f.name,guess:f.name.replace(/\.csv$/i,''),matched:matched||null,status};
+  });
+  renderReconcile();
+}
+function renderReconcile(){
+  const offices=Object.keys(S.roster.offices);
+  const used=S.reconcile.filter(r=>r.matched).map(r=>r.matched);
+  const missing=offices.filter(o=>!used.includes(o));
+  let rows=S.reconcile.map((r,i)=>{
+    const opts=`<option value="">— skip this file —</option>`+offices.map(o=>`<option value="${o}" ${r.matched===o?'selected':''}>${o}</option>`).join('');
+    const badge=r.status==='matched'?'<span class="badge ok">exact match</span>':r.status==='near'?'<span class="badge warn">near match — confirm</span>':'<span class="badge danger">no match</span>';
+    const file=S.reviewFiles.find(f=>f.name===r.fileName);
+    return `<tr>
+      <td><b>${r.fileName}</b><div class="mini">${file.rows.length} rows</div></td>
+      <td>${badge}</td>
+      <td><select class="sel" onchange="setReconcile(${i},this.value)">${opts}</select></td>
+    </tr>`;
+  }).join('');
+  let warn='';
+  if(missing.length)warn+=`<div class="callout warn" style="margin-top:12px"><b>${missing.length} office(s) with no review file:</b> ${missing.join(', ')}. They'll show no data.</div>`;
+  if(S.reconcile.some(r=>r.status==='unmatched'&&!r.matched))warn+=`<div class="callout warn" style="margin-top:12px">Some files matched no office and will be skipped unless you map them above.</div>`;
+  $('#reconcile-body').innerHTML=`<div class="table-scroll"><table class="table"><thead><tr><th>Review file</th><th>Status</th><th>Maps to office</th></tr></thead><tbody>${rows}</tbody></table></div>${warn}`;
+}
+function setReconcile(i,v){S.reconcile[i].matched=v||null;S.reconcile[i].status=v?'matched':'unmatched';renderReconcile();}
+
+/* ---------------- file handling ---------------- */
+function pick(which){$('#file-'+which).click();}
+$('#file-roster').addEventListener('change',e=>{if(e.target.files[0])handleRoster(e.target.files[0]);});
+$('#file-reviews').addEventListener('change',e=>{[...e.target.files].forEach(handleReview);});
+$('#file-pos').addEventListener('change',e=>{if(e.target.files[0])loadKeywords('pos',e.target.files[0]);});
+$('#file-neg').addEventListener('change',e=>{if(e.target.files[0])loadKeywords('neg',e.target.files[0]);});
+// Shared with request-review.html via localStorage, so a roster/settings load in either
+// tool is picked up by the other without uploading the same file twice.
+const SETTINGS_STORAGE_KEY='dermaops_settings_v1';
+function saveSettingsToStorage(payload){ try{localStorage.setItem(SETTINGS_STORAGE_KEY,JSON.stringify(payload));}catch(e){} }
+function loadSettingsFromStorage(){ try{const raw=localStorage.getItem(SETTINGS_STORAGE_KEY);return raw?JSON.parse(raw):null;}catch(e){return null;} }
+function applyRosterFromText(filename,text,chipLabel){
+  const objs=parseRosterFlexible(filename,text);
+  S.rosterFile=filename;S.roster=buildRoster(objs);openAliasIds.clear();
+  $('#roster-chips').innerHTML=`<span class="filechip">${escapeHtml(chipLabel||filename)}<button class="x" onclick="clearRoster()">✕</button></span>`;
+  renderRosterReport();refreshUploadGate();
+  saveSettingsToStorage(buildSettingsPayload());
+}
+function handleRoster(file){
+  const rd=new FileReader();rd.onload=()=>{ applyRosterFromText(file.name,rd.result,file.name); };rd.readAsText(file);
+}
+function handleReview(file){
+  const rd=new FileReader();rd.onload=()=>{
+    const {rows}=parseCSV(rd.result);
+    if(S.reviewFiles.some(f=>f.name===file.name))return;
+    S.reviewFiles.push({name:file.name,rows});
+    renderReviewChips();refreshUploadGate();
+  };rd.readAsText(file);
+}
+function renderReviewChips(){
+  $('#review-chips').innerHTML=S.reviewFiles.map((f,i)=>`<span class="filechip">${f.name} · ${f.rows.length}<button class="x" onclick="removeReview(${i})">✕</button></span>`).join('');
+}
+function removeReview(i){S.reviewFiles.splice(i,1);renderReviewChips();refreshUploadGate();}
+function clearRoster(){S.roster=null;S.rosterFile=null;openAliasIds.clear();$('#roster-chips').innerHTML='';$('#roster-report').innerHTML='';try{localStorage.removeItem(SETTINGS_STORAGE_KEY);}catch(e){}refreshUploadGate();}
+function refreshUploadGate(){$('#toReconcile').disabled=!(S.roster&&S.reviewFiles.length);}
+['roster','reviews'].forEach(w=>{
+  const d=$('#drop-'+w);
+  ['dragenter','dragover'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.add('hot');}));
+  ['dragleave','drop'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.remove('hot');}));
+  d.addEventListener('drop',e=>{const all=[...e.dataTransfer.files];if(w==='roster'){const f=all.find(f=>/\.(csv|txt|json)$/i.test(f.name));if(f)handleRoster(f);}else all.filter(f=>/\.csv$/i.test(f.name)).forEach(handleReview);});
+});
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+// Highlights the exact POS/NEG keyword hits the rules engine scored against, so a flagged
+// review is explainable at a glance. Longest keyword wins at a given position (e.g. "long wait"
+// over "wait") to mirror how a person would actually read the phrase.
+function highlightKeywords(text){
+  text=text||'';
+  const all=[...POS.map(w=>({w,cls:'hl-pos'})),...NEG.map(w=>({w,cls:'hl-neg'}))].sort((a,b)=>b.w.length-a.w.length);
+  if(!all.length)return escapeHtml(text);
+  const re=new RegExp('('+all.map(x=>esc(x.w)).join('|')+')','gi');
+  let out='',last=0,m;
+  while((m=re.exec(text))){
+    out+=escapeHtml(text.slice(last,m.index));
+    const hit=all.find(x=>x.w.toLowerCase()===m[0].toLowerCase())||all[0];
+    out+=`<mark class="${hit.cls}">${escapeHtml(m[0])}</mark>`;
+    last=re.lastIndex;
+  }
+  out+=escapeHtml(text.slice(last));
+  return out;
+}
+
+/* ---------------- navigation ---------------- */
+function go(step){
+  if(step==='upload')renderRosterReport();
+  if(step==='reconcile')buildReconcile();
+  if(step==='attribute'){renderCoverage();renderKeywordStatus();}
+  if(step==='review')renderQueue();
+  if(step==='dashboard')renderDashboard();
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('#view-'+step).classList.add('active');
+  S.step=step;markCurrent(step);window.scrollTo({top:0,behavior:'smooth'});
+}
+function markCurrent(step){
+  const order=['upload','reconcile','attribute','review','dashboard'];const ci=order.indexOf(step);
+  document.querySelectorAll('.step').forEach(el=>{
+    const si=order.indexOf(el.dataset.step);
+    el.classList.toggle('current',si===ci);
+    el.classList.toggle('done',si<ci);
+  });
+}
+function markStep(step,done){const el=document.querySelector(`.step[data-step="${step}"]`);if(done)el.classList.add('done');}
+function jumpToStep(step){
+  const order=['upload','reconcile','attribute','review','dashboard'];
+  const ti=order.indexOf(step), ci=order.indexOf(S.step);
+  if(ti<=ci)go(step); else toast('Finish the current step first');
+}
+
+/* ---------------- export ---------------- */
+function exportCSV(){
+  const head=['Office','Reviewer','ApproxDate','OverallStar','Staff','MatchedAlias','DirectedSentiment','PersonScore','Confidence','Method','Bucket','Categories','ReviewText'];
+  const lines=[head.join(',')];
+  S.attributions.forEach(a=>{
+    const cats=(a.categories||[]).join('|');
+    if(a.bucket==='company'||!a.people.length){
+      lines.push(csvRow([a.office,a.reviewer,a.approx,a.overall,'(company-wide)','','','','','',a.bucket,cats,a.text]));
+    }else a.people.forEach(p=>{
+      lines.push(csvRow([a.office,a.reviewer,a.approx,a.overall,p.name,p.matchedAlias,p.sentiment,p.score,(p.confidence).toFixed(2),p.method,a.bucket,cats,a.text]));
+    });
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='attributions.csv';a.click();URL.revokeObjectURL(url);
+  toast('Exported attributions.csv');
+}
+function csvRow(arr){return arr.map(v=>{v=(v==null?'':String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');}
+
+/* ---------------- diagnostics export (for handing matching performance to Claude) ---------------- */
+function exportDiagnostics(){
+  if(!S.attributions.length){toast('Run attribution first');return;}
+  const roster={};
+  Object.entries(S.roster.offices).forEach(([name,o])=>{
+    roster[name]={
+      staff:o.staff.map(s=>({name:s.canonical,aliases:s.aliases})),
+      collisions:o.collisions.map(c=>({alias:c.alias,candidates:c.ids.map(id=>o.staff.find(s=>s.id===id).canonical)})),
+      warnings:o.warnings
+    };
+  });
+  const gapReport={};
+  Object.keys(S.roster.offices).forEach(off=>{ gapReport[off]=scanCoverage(off).gapList; });
+  const reviews=S.attributions.map(a=>({
+    office:a.office,reviewer:a.reviewer,overall:a.overall,approx:a.approx,text:a.text,
+    bucket:a.bucket,needsReview:a.needsReview,categories:a.categories||[],
+    people:a.people.map(p=>({
+      name:p.name,matchedAlias:p.matchedAlias,ambiguous:!!p.ambiguous,fuzzy:!!p.fuzzy,
+      sentiment:p.sentiment,score:p.score,confidence:p.confidence,method:p.method,
+      rationale:p.rationale||'',flags:p.flags||[]
+    }))
+  }));
+  const payload={
+    exportedAt:new Date().toISOString(),
+    summary:{
+      totalReviews:reviews.length,
+      attributed:reviews.filter(r=>r.bucket==='attributed').length,
+      companyWide:reviews.filter(r=>r.bucket==='company').length,
+      ambiguous:reviews.filter(r=>r.bucket==='ambiguous').length,
+      needReview:reviews.filter(r=>r.needsReview).length
+    },
+    roster,gapReport,reviews
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='review-attribution-diagnostics.json';a.click();URL.revokeObjectURL(url);
+  toast('Exported diagnostics JSON');
+}
+
+/* ---------------- sample + reset ---------------- */
+const SAMPLE_ROSTER=`Office,Name,Aliases
+Westport,Dr. Sarah Chen,Dr. Chen|Dr Chen|Sarah
+Westport,Mike Alvarez,Mike|Miguel|Mikey
+Westport,Priya Nair,Priya|Dr. Nair|Dr Nair
+Westport,Jordan Lee,Jordan|Jordy|J
+Westport,Sara Mills,Sara|Sarah
+Darien,Sarah Whitman,Dr. Whitman|Dr Whitman|Sarah
+Darien,Tom Becker,Tom|Tommy|Dr. Becker
+Darien,Ana Ruiz,Ana|Dr. Ruiz|Dr Ruiz`;
+const SAMPLE_WEST=`Reviewer,Rating,Date,MonthsAgo,ApproxDate,Review
+Karen P.,3,,5,2026-04,"Mike was fantastic and so patient with all my questions, but Dr. Chen barely looked at me and seemed rushed. Mixed bag."
+Dave R.,5,,5,2026-04,"Sarah and Priya made the whole visit easy and comfortable. Couldn't ask for more!"
+Lena M.,5,,4,2026-05,"Jordan checked me in — he was so kind and even remembered my name from last time. Five stars."
+Greg T.,2,,4,2026-05,"Mike was SO helpful. Only waited 40 minutes for a 2 minute conversation. Thanks a lot."
+Ada W.,5,,3,2026-06,"Great clinic, spotless and fast. Highly recommend to anyone in the area."
+Ben K.,2,,3,2026-06,"The lady at the front desk was dismissive and rude. Left a bad taste."
+Nora S.,5,,2,2026-07,"Mikey talked me through the whole procedure and calmed my nerves. Wonderful."
+Sara L.,5,,2,2026-07,"Hi, I'm Sara and I've been a patient for years. Dr. Nair is absolutely wonderful and thorough."
+Paul V.,4,,1,2026-08,"Priya was great. Jordy at checkout was friendly too. Quick visit."
+Mia H.,1,,1,2026-08,"Dr. Chen was cold and I felt rushed the entire time. Would not return."`;
+const SAMPLE_DARIEN=`Reviewer,Rating,Date,MonthsAgo,ApproxDate,Review
+Rita G.,5,,5,2026-04,"Tom was great — Tommy always remembers my kids' names. Feels personal."
+Sam D.,4,,4,2026-05,"Dr. Whitman rushed me a bit, but Ana at the desk was lovely and made up for it."
+Joe F.,5,,3,2026-06,"Wonderful experience overall, everyone was professional."
+Amy R.,2,,2,2026-07,"Ana was kind but the wait was far too long. Two stars for the wait."
+Ken B.,5,,1,2026-08,"Dr. Becker took his time and explained everything clearly. Best derm visit I've had."`;
+function loadSample(){
+  resetAll();
+  S.rosterFile='Roster.csv';S.roster=buildRoster(parseCSV(SAMPLE_ROSTER).rows);
+  $('#roster-chips').innerHTML=`<span class="filechip">Roster.csv<button class="x" onclick="clearRoster()">✕</button></span>`;
+  renderRosterReport();
+  S.reviewFiles=[{name:'Westport.csv',rows:parseCSV(SAMPLE_WEST).rows},{name:'Darien Office.csv',rows:parseCSV(SAMPLE_DARIEN).rows}];
+  renderReviewChips();refreshUploadGate();
+  toast('Sample loaded — note "Darien Office.csv" is a near-match to test reconcile');
+}
+function resetAll(){
+  Object.assign(S,{rosterFile:null,roster:null,reviewFiles:[],reconcile:[],attributions:[],step:'upload'});
+  POS=[...DEFAULT_POS];NEG=[...DEFAULT_NEG];CATEGORIES=JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));STOPWORDS=[...DEFAULT_STOPWORDS];REVIEW_LINKS={};
+  $('#roster-chips').innerHTML='';$('#roster-report').innerHTML='';$('#review-chips').innerHTML='';
+  $('#attr-summary').innerHTML='';$('#run-status').textContent='';$('#prog').style.display='none';
+  $('#toReview').disabled=true;
+  if($('#officeChecks')){$('#officeChecks').innerHTML='';delete $('#officeChecks').dataset.builtFor;}
+  ['filterFrom','filterTo'].forEach(id=>{ if($('#'+id))$('#'+id).value=''; });
+  if($('#filterStar'))$('#filterStar').value='all';
+  if($('#filterCategory'))$('#filterCategory').innerHTML='<option value="all">All categories</option>';
+  if($('#filterSentiment'))$('#filterSentiment').value='all';
+  if($('#filterStaff'))$('#filterStaff').innerHTML='<option value="all">All staff</option>';
+  lastOfficeSelectionKey=null;
+  refreshUploadGate();go('upload');
+}
+(function tryRestoreFromStorage(){
+  const stored=loadSettingsFromStorage();
+  if(stored)applyRosterFromText('Settings.json',JSON.stringify(stored),'Settings.json (shared)');
+})();
+</script>
+</body>
+</html>
