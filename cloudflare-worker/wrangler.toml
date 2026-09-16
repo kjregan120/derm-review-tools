@@ -4,9 +4,13 @@ compatibility_date = "2025-01-01"
 
 [vars]
 ALLOWED_ORIGIN = "https://kjregan120.github.io"
+# "twilio" or "textbelt" -- switch back to "twilio" once your account is fully set up
+SMS_PROVIDER = "textbelt"
 
 # Secrets (never put these here — set them with `wrangler secret put <NAME>`):
-#   TWILIO_ACCOUNT_SID
-#   TWILIO_AUTH_TOKEN
-#   TWILIO_FROM_NUMBER
 #   APP_PASSWORD
+#   TWILIO_ACCOUNT_SID   (only used when SMS_PROVIDER = "twilio")
+#   TWILIO_AUTH_TOKEN    (only used when SMS_PROVIDER = "twilio")
+#   TWILIO_FROM_NUMBER   (only used when SMS_PROVIDER = "twilio")
+#   TEXTBELT_KEY         (only used when SMS_PROVIDER = "textbelt"; optional --
+#                         defaults to the shared free "textbelt" test key if unset)

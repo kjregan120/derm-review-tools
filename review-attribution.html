@@ -1344,6 +1344,7 @@ document.addEventListener('click',()=>{const d=$('#adminDropdown');if(d)d.classL
 function adminClearSettings(){
   if(!confirm('Clear saved roster/settings from this browser? Request a Review will lose it too until you re-upload Settings.json.'))return;
   clearRoster();
+  try{sessionStorage.removeItem(SESSION_STORAGE_KEY);}catch(e){}
   toast('Cleared saved settings from this browser');
 }
 function refreshUploadGate(){$('#toReconcile').disabled=!(S.roster&&S.reviewFiles.length);}
@@ -1393,6 +1394,38 @@ function markCurrent(step){
   });
 }
 function markStep(step,done){const el=document.querySelector(`.step[data-step="${step}"]`);if(done)el.classList.add('done');}
+
+/* ---------------- in-progress work: survives navigating to Request a Review and back,
+   cleared when the tab closes (sessionStorage, not localStorage) ---------------- */
+const SESSION_STORAGE_KEY='dermaops_session_v1';
+function saveSessionState(){
+  try{
+    sessionStorage.setItem(SESSION_STORAGE_KEY,JSON.stringify({
+      reviewFiles:S.reviewFiles, reconcile:S.reconcile, attributions:S.attributions, step:S.step
+    }));
+  }catch(e){}
+}
+function restoreSessionState(){
+  if(!S.roster)return; // roster restores separately from localStorage; needed before reconcile/attribute data means anything
+  let snap;
+  try{ const raw=sessionStorage.getItem(SESSION_STORAGE_KEY); if(!raw)return; snap=JSON.parse(raw); }catch(e){return;}
+  if(!snap||!Array.isArray(snap.reviewFiles)||!snap.reviewFiles.length)return;
+  S.reviewFiles=snap.reviewFiles;
+  S.reconcile=Array.isArray(snap.reconcile)?snap.reconcile:[];
+  S.attributions=Array.isArray(snap.attributions)?snap.attributions:[];
+  renderReviewChips();refreshUploadGate();
+  if(S.reconcile.length)renderReconcile();
+  if(S.attributions.length){renderAttrSummary(0);$('#toReview').disabled=false;}
+  const step=snap.step||'upload';
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('#view-'+step).classList.add('active');
+  S.step=step;markCurrent(step);
+  if(step==='attribute'){renderCoverage();renderKeywordStatus();}
+  if(step==='review')renderQueue();
+  if(step==='dashboard')renderDashboard();
+}
+window.addEventListener('pagehide',saveSessionState);
+window.addEventListener('beforeunload',saveSessionState);
 function jumpToStep(step){
   const order=['upload','reconcile','attribute','review','dashboard'];
   const ti=order.indexOf(step), ci=order.indexOf(S.step);
@@ -1509,6 +1542,7 @@ function resetAll(){
 (function tryRestoreFromStorage(){
   const stored=loadSettingsFromStorage();
   if(stored)applyRosterFromText('Settings.json',JSON.stringify(stored),'Settings.json (shared)');
+  restoreSessionState();
 })();
 </script>
 </body>
