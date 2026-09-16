@@ -1,0 +1,3 @@
+Settings.json
+cloudflare-worker/.wrangler/
+node_modules/

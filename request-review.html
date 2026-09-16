@@ -157,6 +157,7 @@ button{cursor:pointer}
 const $=s=>document.querySelector(s);
 let ROSTER_OFFICES={}; // {officeName: [staffName,...]}
 let REVIEW_LINKS={};
+let SMS_WORKER={};
 
 function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(window.__t);window.__t=setTimeout(()=>t.style.opacity=0,1900);}
 function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -174,6 +175,7 @@ function applySettingsData(data){
     offices.forEach(o=>{ (ROSTER_OFFICES[o]=ROSTER_OFFICES[o]||[]).push(name); });
   });
   REVIEW_LINKS=(data.reviewLinks&&typeof data.reviewLinks==='object')?data.reviewLinks:{};
+  SMS_WORKER=(data.smsWorker&&typeof data.smsWorker==='object')?data.smsWorker:{};
   populateOffices();
 }
 function populateOffices(){
@@ -247,14 +249,39 @@ function renderConfirmSummary(){
   $('#confirmSummary').innerHTML=`To: <b>${escapeHtml($('#custName').value.trim()||'—')}</b> · ${escapeHtml(phoneFmt)} · ${escapeHtml($('#officeSel').value||'—')}${staff?' · seen '+escapeHtml(staff):''}`;
   $('#confirmPreview').textContent=composeMessage();
 }
-function confirmSend(){
+async function confirmSend(){
   const digits=$('#custPhone').value.replace(/\D/g,'');
   const body=composeMessage();
-  // STUB: no SMS provider is wired up yet. A real send would go here, e.g.:
-  //   await fetch('/api/send-sms', {method:'POST', headers:{'Content-Type':'application/json'},
-  //     body: JSON.stringify({to:'+1'+digits, body})});
-  console.log('[request-review] would send SMS', {to:'+1'+digits, body});
-  toast('Not actually sent — no SMS provider connected yet (see console)');
+  const to='+1'+digits;
+
+  if(!SMS_WORKER.url||!SMS_WORKER.password){
+    toast('No SMS worker configured — add smsWorker.url/password in Settings.json');
+    console.log('[request-review] would send SMS',{to,body});
+    return;
+  }
+
+  const btn=document.querySelector('#view-confirm .btn.primary');
+  btn.disabled=true;btn.textContent='Sending…';
+  try{
+    const res=await fetch(SMS_WORKER.url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:SMS_WORKER.password,to,body})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok||!data.ok){
+      toast('Send failed: '+(data.error||res.status));
+      console.error('[request-review] send failed',data);
+      return;
+    }
+    toast('Text sent!');
+    console.log('[request-review] sent',data);
+  }catch(e){
+    toast('Send failed — network error (see console)');
+    console.error('[request-review] send error',e);
+  }finally{
+    btn.disabled=false;btn.textContent='Send text';
+  }
 }
 const restored=loadSettingsFromStorage();
 if(restored)applySettingsData(restored);

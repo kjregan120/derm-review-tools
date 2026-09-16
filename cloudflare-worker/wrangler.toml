@@ -1,0 +1,12 @@
+name = "derm-review-sms"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://kjregan120.github.io"
+
+# Secrets (never put these here — set them with `wrangler secret put <NAME>`):
+#   TWILIO_ACCOUNT_SID
+#   TWILIO_AUTH_TOKEN
+#   TWILIO_FROM_NUMBER
+#   APP_PASSWORD
