@@ -402,6 +402,9 @@ function parseRosterFlexible(filename, text){
     if(data&&!Array.isArray(data)&&data.reviewLinks&&typeof data.reviewLinks==='object'){
       REVIEW_LINKS=data.reviewLinks; // not used here -- kept only so re-exporting settings doesn't drop it
     }
+    if(data&&!Array.isArray(data)&&data.smsWorker&&typeof data.smsWorker==='object'){
+      SMS_WORKER=data.smsWorker; // not used here -- kept only so re-exporting settings doesn't drop it
+    }
     const list=Array.isArray(data)?data:(data.staff||data.roster||[]);
     const objs=[];
     list.forEach(p=>{
@@ -685,6 +688,7 @@ let STOPWORDS=['the','a','an','and','or','but','is','was','were','are','be','bee
   'am','been','being','doctor','staff','office','visit','time','experience','one','really','always','every'];
 const DEFAULT_STOPWORDS=[...STOPWORDS];
 let REVIEW_LINKS={}; // {officeName: googleReviewUrl} -- managed by request-review.html, just passed through here
+let SMS_WORKER={}; // {url,password} -- managed by request-review.html, just passed through here
 function sameList(a,b){return a.length===b.length&&a.every((w,i)=>w===b[i]);}
 function pickKeywords(which){$('#file-'+which).click();}
 function parseKeywordFile(text){return text.replace(/\r/g,'').split('\n').map(l=>l.trim().toLowerCase()).filter(l=>l&&!l.startsWith('#'));}
@@ -734,7 +738,7 @@ function buildSettingsPayload(){
     });
   }
   const roster=[...people.values()].map(p=>({name:p.name,credential:p.credential,offices:p.offices,aliases:[...p.aliasSet]}));
-  return {roster, sentimentKeywords:{positive:POS,negative:NEG}, categories:CATEGORIES, stopwords:STOPWORDS, reviewLinks:REVIEW_LINKS};
+  return {roster, sentimentKeywords:{positive:POS,negative:NEG}, categories:CATEGORIES, stopwords:STOPWORDS, reviewLinks:REVIEW_LINKS, smsWorker:SMS_WORKER};
 }
 function downloadSettings(){
   if(!S.roster){toast('Load a roster first');return;}
@@ -1489,7 +1493,7 @@ function loadSample(){
 }
 function resetAll(){
   Object.assign(S,{rosterFile:null,roster:null,reviewFiles:[],reconcile:[],attributions:[],step:'upload'});
-  POS=[...DEFAULT_POS];NEG=[...DEFAULT_NEG];CATEGORIES=JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));STOPWORDS=[...DEFAULT_STOPWORDS];REVIEW_LINKS={};
+  POS=[...DEFAULT_POS];NEG=[...DEFAULT_NEG];CATEGORIES=JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));STOPWORDS=[...DEFAULT_STOPWORDS];REVIEW_LINKS={};SMS_WORKER={};
   $('#roster-chips').innerHTML='';$('#roster-report').innerHTML='';$('#review-chips').innerHTML='';
   $('#attr-summary').innerHTML='';$('#run-status').textContent='';$('#prog').style.display='none';
   $('#toReview').disabled=true;
