@@ -21,6 +21,14 @@ button{cursor:pointer}
 }
 .top-right{margin-left:auto;font-size:11px;color:#d9ccef;display:flex;align-items:center;gap:10px}
 .eph-dot{width:7px;height:7px;border-radius:50%;background:#8be0b0;box-shadow:0 0 0 3px rgba(139,224,176,.25)}
+.admin-menu{position:relative}
+.admin-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:9px;padding:7px 11px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:6px}
+.admin-btn:hover{background:rgba(255,255,255,.2)}
+.admin-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);min-width:210px;padding:6px;z-index:60}
+.admin-dropdown.open{display:block}
+.admin-dropdown button{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 10px;border-radius:8px;font-size:12px;font-weight:700;color:var(--ink)}
+.admin-dropdown button:hover{background:#f3f5f8}
+.admin-dropdown button.danger{color:var(--danger)}
 .shell{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 55px)}
 .rail{
   background:#fff;border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:6px;
@@ -122,6 +130,12 @@ a.inline{color:var(--purple2);font-weight:700}
 <body>
 <div class="app">
   <header class="topbar">
+    <div class="admin-menu">
+      <button class="admin-btn" onclick="toggleAdminMenu(event)">⚙ Admin ▾</button>
+      <div class="admin-dropdown" id="adminDropdown">
+        <button class="danger" onclick="adminClearSettings()">Clear saved settings</button>
+      </div>
+    </div>
     <div class="top-right"><span class="eph-dot"></span>Ephemeral session · nothing is saved</div>
   </header>
 
@@ -1320,6 +1334,14 @@ function renderReviewChips(){
 }
 function removeReview(i){S.reviewFiles.splice(i,1);renderReviewChips();refreshUploadGate();}
 function clearRoster(){S.roster=null;S.rosterFile=null;openAliasIds.clear();$('#roster-chips').innerHTML='';$('#roster-report').innerHTML='';try{localStorage.removeItem(SETTINGS_STORAGE_KEY);}catch(e){}refreshUploadGate();}
+
+function toggleAdminMenu(e){e.stopPropagation();$('#adminDropdown').classList.toggle('open');}
+document.addEventListener('click',()=>{const d=$('#adminDropdown');if(d)d.classList.remove('open');});
+function adminClearSettings(){
+  if(!confirm('Clear saved roster/settings from this browser? Request a Review will lose it too until you re-upload Settings.json.'))return;
+  clearRoster();
+  toast('Cleared saved settings from this browser');
+}
 function refreshUploadGate(){$('#toReconcile').disabled=!(S.roster&&S.reviewFiles.length);}
 ['roster','reviews'].forEach(w=>{
   const d=$('#drop-'+w);
